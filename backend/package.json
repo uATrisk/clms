@@ -1,0 +1,9 @@
+{
+  "name": "clms-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "commonjs",
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {}
+}

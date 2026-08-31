@@ -57,8 +57,8 @@
   - [x] Live incoming requests queue (`GET /api/staff/orders/queue`)
   - [x] Order Acceptance & dual-count verification UI (`PATCH /api/staff/orders/:id/accept` - Backend implemented; frontend UI pending)
   - [x] Count mismatch auto-flagging logic
-  - [ ] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date setting
-  - [ ] Status update: Mark Ready (triggers OTP generation)
+  - [x] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date setting (Backend implemented; frontend UI pending)
+  - [x] Status update: Mark Ready (triggers OTP generation & plaintext OTP exposure for student tracking) (Backend implemented; frontend UI pending)
   - [ ] Bulk status update feature
 - [ ] **Collection Center Dashboard**
   - [ ] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search`)

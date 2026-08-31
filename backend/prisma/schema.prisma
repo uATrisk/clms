@@ -71,7 +71,6 @@ model Student {
 
   @@index([collegeId])
   @@index([bagNumber])
-  @@index([email])
   @@index([mobileNumber])
   @@map("students")
 }
@@ -91,10 +90,12 @@ model Order {
   expectedReadyAt   DateTime?    @map("expected_ready_at") @db.Date // just date precision if only day matters, else Timestamp
   actualReadyAt     DateTime?    @map("actual_ready_at")
   collectedAt       DateTime?    @map("collected_at")
-  collectionOtp     String?      @map("collection_otp")
-  countMismatchFlag Boolean      @default(false) @map("count_mismatch_flag")
+  collectionOtp       String?        @map("collection_otp")
+  collectionOtpPlain  String?        @map("collection_otp_plain")
+  otpExpiresAt        DateTime?      @map("otp_expires_at")
+  countMismatchFlag   Boolean        @default(false) @map("count_mismatch_flag")
 
-  assignedWasherId  String?      @map("assigned_washer_id") @db.Uuid
+  assignedWasherId    String?        @map("assigned_washer_id") @db.Uuid
 
   createdAt         DateTime     @default(now()) @map("created_at")
   updatedAt         DateTime     @updatedAt @map("updated_at")

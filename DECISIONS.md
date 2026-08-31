@@ -167,3 +167,20 @@ We adopted `@react-oauth/google` as the official client library for Google OAuth
 ### Status
 Accepted
 
+---
+
+## [2026-08-31] ADR 009: Interim Plaintext Storage of Collection OTP
+
+### Context
+While the laundry tracking layout allows students to view their Collection OTP when an order is marked `READY`, the system generates a secure bcrypt hash of the OTP for later verification prior to collection (as intended for a secure SMS-delivery model). However, the real SMS delivery mechanism is scheduled for Phase 3. 
+
+### Decision
+We chose to store the OTP in plaintext alongside its hash (`collectionOtpPlain`) as an interim solution so students can view it directly on the tracking page until real SMS delivery is built. When an order transitions to `READY`, the plaintext OTP is exposed via the tracking API. It must be cleared/nulled immediately once the status progresses to `COLLECTED` in the future `/collect` endpoint.
+
+### Rationale & Important Caveat
+This is a temporary measure designed to unblock end-to-end testing and the frontend tracking lifecycle without paying the cost of real SMS vendor setup right now. 
+**Security Tradeoff:** The plaintext OTP is readable by anyone with direct database access. This compromises the cryptographic intention behind the `collectionOtp` hash. This choice is intentionally isolated to an explicitly named `collectionOtpPlain` field to ensure it is not silently forgotten as a permanent design choice. Once SMS dispatch is added in Phase 3, this field should ideally be phased out entirely.
+
+### Status
+Accepted (Interim)
+

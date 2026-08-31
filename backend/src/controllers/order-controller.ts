@@ -194,6 +194,7 @@ export const trackOrder = async (req: Request, res: Response, next: NextFunction
         expectedReadyAt: order.expectedReadyAt,
         actualReadyAt: order.actualReadyAt,
         collectedAt: order.collectedAt,
+        collectionOtp: order.status === 'READY' ? order.collectionOtpPlain : undefined,
         student: {
           name: order.student.name,
           bagNumber: order.student.bagNumber,

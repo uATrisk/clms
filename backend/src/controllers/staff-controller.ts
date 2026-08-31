@@ -267,3 +267,175 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
     next(error);
   }
 };
+
+export const searchOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const q = req.query.q as string;
+
+    if (!q || typeof q !== 'string' || q.trim() === '') {
+      const error = new Error('Query parameter "q" is required and cannot be empty') as AppError;
+      error.status = 400;
+      throw error;
+    }
+
+    const trimmedQuery = q.trim();
+
+    const orders = await prisma.order.findMany({
+      where: {
+        status: 'READY',
+        OR: [
+          { bagNumber: { contains: trimmedQuery, mode: 'insensitive' } },
+          { orderCode: { contains: trimmedQuery, mode: 'insensitive' } },
+          {
+            student: {
+              collegeId: { contains: trimmedQuery, mode: 'insensitive' },
+            },
+          },
+          {
+            student: {
+              mobileNumber: { contains: trimmedQuery },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        orderCode: true,
+        bagNumber: true,
+        status: true,
+        actualReadyAt: true,
+        student: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({ orders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const collectOrderSchema = z.object({
+  otp: z.string().min(1, 'OTP is required'),
+  returnedCount: z.number().int().min(0, 'Returned count must be a non-negative integer'),
+});
+
+export const collectOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const authReq = req as AuthenticatedRequest;
+    const staffId = authReq.user?.id;
+
+    if (!staffId) {
+      const error = new Error('Unauthorized: Staff ID not found in token') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const parsed = collectOrderSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const error = new Error('Validation Error') as AppError;
+      error.status = 400;
+      error.errors = parsed.error.format();
+      throw error;
+    }
+
+    const { otp, returnedCount } = parsed.data;
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        student: {
+          select: {
+            name: true,
+            email: true,
+            mobileNumber: true,
+            collegeId: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      const error = new Error('Order not found') as AppError;
+      error.status = 404;
+      throw error;
+    }
+
+    if (order.status !== 'READY') {
+      const error = new Error(
+        `Invalid status transition: Order is currently ${order.status}. Only orders with status READY can be collected.`
+      ) as AppError;
+      error.status = 400;
+      throw error;
+    }
+
+    if (!order.collectionOtp) {
+      const error = new Error('No OTP found for this order. Please regenerate OTP.') as AppError;
+      error.status = 400;
+      throw error;
+    }
+
+    if (order.otpExpiresAt && new Date() > order.otpExpiresAt) {
+      const error = new Error('OTP expired, please regenerate') as AppError;
+      error.status = 400;
+      throw error;
+    }
+
+    const isOtpValid = await bcrypt.compare(otp, order.collectionOtp);
+    if (!isOtpValid) {
+      const error = new Error('Invalid OTP') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    let note: string | undefined = undefined;
+    if (order.verifiedCount !== null && order.verifiedCount !== returnedCount) {
+      note = `Returned count mismatch: verified ${order.verifiedCount} vs returned ${returnedCount}`;
+    }
+
+    const now = new Date();
+
+    const finalizedOrder = await prisma.$transaction(async (tx) => {
+      const updated = await tx.order.update({
+        where: { id },
+        data: {
+          status: 'COLLECTED',
+          returnedCount,
+          collectedAt: now,
+          collectionOtpPlain: null, // Clear plaintext OTP once collected
+        },
+        include: {
+          student: {
+            select: {
+              name: true,
+              email: true,
+              mobileNumber: true,
+              collegeId: true,
+            },
+          },
+        },
+      });
+
+      // Log transition: READY -> COLLECTED
+      await logStatusChange({
+        orderId: id,
+        fromStatus: 'READY',
+        toStatus: 'COLLECTED',
+        changedById: staffId,
+        note,
+        tx,
+      });
+
+      return updated;
+    });
+
+    return res.status(200).json({ order: finalizedOrder });
+  } catch (error) {
+    next(error);
+  }
+};

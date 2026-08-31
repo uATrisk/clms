@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import { getOrdersQueue, acceptOrder, updateOrderStatus } from '../controllers/staff-controller';
+import {
+  getOrdersQueue,
+  acceptOrder,
+  updateOrderStatus,
+  searchOrders,
+  collectOrder,
+} from '../controllers/staff-controller';
 import { authenticate, authorize } from '../middlewares/auth-middleware';
 
 const router = Router();
@@ -12,5 +18,11 @@ router.patch('/orders/:id/accept', authenticate, authorize(['WASHER', 'ADMIN']),
 
 // Order Status Updates (Set ETA / Mark Ready)
 router.patch('/orders/:id/status', authenticate, authorize(['WASHER', 'ADMIN']), updateOrderStatus);
+
+// Order Search (Collection Center)
+router.get('/orders/search', authenticate, authorize(['COLLECTION', 'WASHER', 'ADMIN']), searchOrders);
+
+// Order Handover / Collection
+router.patch('/orders/:id/collect', authenticate, authorize(['COLLECTION', 'WASHER', 'ADMIN']), collectOrder);
 
 export default router;

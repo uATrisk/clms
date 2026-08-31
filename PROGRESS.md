@@ -61,8 +61,8 @@
   - [x] Status update: Mark Ready (triggers OTP generation & plaintext OTP exposure for student tracking) (Backend implemented; frontend UI pending)
   - [ ] Bulk status update feature
 - [ ] **Collection Center Dashboard**
-  - [ ] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search`)
-  - [ ] Collection OTP verification & count returned verification (`PATCH /api/staff/orders/:id/collect`)
+  - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` - Backend implemented; frontend UI pending)
+  - [x] Collection OTP verification & count returned verification (`PATCH /api/staff/orders/:id/collect` - Backend implemented; frontend UI pending)
   - [ ] Manual override with Admin PIN support
 
 ---

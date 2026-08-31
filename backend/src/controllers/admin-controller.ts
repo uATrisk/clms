@@ -368,3 +368,177 @@ export const getAnalyticsSummary = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
+const getComplaintsListSchema = z.object({
+  status: z.enum(['OPEN', 'UNDER_REVIEW', 'RESOLVED', 'ESCALATED']).optional(),
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 50)),
+});
+
+export const getComplaintsList = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parsed = getComplaintsListSchema.safeParse(req.query);
+    if (!parsed.success) {
+      const error = new Error('Validation Error') as AppError;
+      error.status = 400;
+      error.errors = parsed.error.format();
+      throw error;
+    }
+
+    const { status, page, limit } = parsed.data;
+
+    const whereClause: Prisma.ComplaintWhereInput = {};
+    if (status) {
+      whereClause.status = status;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [complaints, totalCount] = await Promise.all([
+      prisma.complaint.findMany({
+        where: whereClause,
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderCode: true,
+              bagNumber: true,
+              status: true,
+              student: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  bagNumber: true,
+                  mobileNumber: true,
+                  collegeId: true,
+                },
+              },
+            },
+          },
+          handledBy: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+            },
+          },
+        },
+        orderBy: {
+          raisedAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.complaint.count({ where: whereClause }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    res.status(200).json({
+      complaints,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateComplaintSchema = z.object({
+  status: z.enum(['UNDER_REVIEW', 'RESOLVED', 'ESCALATED'], {
+    message: 'Status must be UNDER_REVIEW, RESOLVED, or ESCALATED',
+  }),
+  resolutionNote: z.string().optional(),
+});
+
+export const updateComplaint = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const authReq = req as AuthenticatedRequest;
+    const adminId = authReq.user?.id;
+
+    if (!adminId) {
+      const error = new Error('Unauthorized') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const parsed = updateComplaintSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const error = new Error('Validation Error') as AppError;
+      error.status = 400;
+      error.errors = parsed.error.format();
+      throw error;
+    }
+
+    const { status, resolutionNote } = parsed.data;
+
+    if (status === 'RESOLVED' && (!resolutionNote || !resolutionNote.trim())) {
+      const error = new Error('Resolution note is required when resolving a complaint') as AppError;
+      error.status = 400;
+      throw error;
+    }
+
+    const existingComplaint = await prisma.complaint.findUnique({
+      where: { id },
+    });
+
+    if (!existingComplaint) {
+      const error = new Error('Complaint not found') as AppError;
+      error.status = 404;
+      throw error;
+    }
+
+    const updatedComplaint = await prisma.complaint.update({
+      where: { id },
+      data: {
+        status,
+        ...(resolutionNote !== undefined ? { resolutionNote: resolutionNote.trim() } : {}),
+        handledById: adminId,
+        resolvedAt: status === 'RESOLVED' ? new Date() : (status === 'UNDER_REVIEW' || status === 'ESCALATED' ? null : existingComplaint.resolvedAt),
+      },
+      include: {
+        order: {
+          select: {
+            orderCode: true,
+            bagNumber: true,
+            status: true,
+            student: {
+              select: {
+                name: true,
+                email: true,
+                mobileNumber: true,
+              },
+            },
+          },
+        },
+        handledBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      message: 'Complaint updated successfully',
+      complaint: updatedComplaint,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

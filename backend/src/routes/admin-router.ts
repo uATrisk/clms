@@ -6,6 +6,8 @@ import {
   updateStaffActiveStatus,
   getOrdersList,
   getAnalyticsSummary,
+  getComplaintsList,
+  updateComplaint,
 } from '../controllers/admin-controller';
 
 const router = Router();
@@ -20,6 +22,10 @@ router.patch('/staff/:id', updateStaffActiveStatus);
 
 // Master order view
 router.get('/orders', getOrdersList);
+
+// Complaints view & handling
+router.get('/complaints', getComplaintsList);
+router.patch('/complaints/:id', updateComplaint);
 
 // Analytics
 router.get('/analytics/summary', getAnalyticsSummary);

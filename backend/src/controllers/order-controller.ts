@@ -14,6 +14,11 @@ const orderSubmissionSchema = z.object({
   selfReportedCount: z.number().int().positive('Item count must be a positive integer')
 });
 
+const raiseComplaintSchema = z.object({
+  category: z.enum(['MISSING', 'DAMAGED', 'WRONG_COUNT', 'WRONG_BAG', 'NOT_READY', 'OTHER']),
+  description: z.string().min(10, 'Description must be at least 10 characters')
+});
+
 export const submitOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = orderSubmissionSchema.safeParse(req.body);
@@ -209,3 +214,62 @@ export const trackOrder = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
+
+export const raiseComplaint = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const orderCode = req.params.orderCode as string;
+    const authReq = req as AuthenticatedRequest;
+
+    if (!orderCode) {
+      const error = new Error('Order code is required') as AppError;
+      error.status = 400;
+      throw error;
+    }
+
+    const parsed = raiseComplaintSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const error = new Error('Validation Error') as AppError;
+      error.status = 400;
+      error.errors = parsed.error.format();
+      throw error;
+    }
+
+    const { category, description } = parsed.data;
+
+    // Verify order exists
+    const order = await prisma.order.findUnique({
+      where: { orderCode }
+    });
+
+    if (!order) {
+      const error = new Error('Order not found with the provided code') as AppError;
+      error.status = 404;
+      throw error;
+    }
+
+    // Verify ownership: authenticated student must own the order
+    if (order.studentId !== authReq.user?.id) {
+      const error = new Error('Forbidden: Cannot raise a complaint for another student\'s order') as AppError;
+      error.status = 403;
+      throw error;
+    }
+
+    // Create the complaint in OPEN status (photoUrl left null for now)
+    const complaint = await prisma.complaint.create({
+      data: {
+        orderId: order.id,
+        category,
+        description,
+        status: 'OPEN'
+      }
+    });
+
+    res.status(201).json({
+      message: 'Complaint raised successfully',
+      complaint
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

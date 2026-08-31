@@ -18,6 +18,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  BarChart3,
+  Clock,
+  AlertTriangle,
+  Layers,
+  Inbox,
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -64,12 +69,27 @@ interface OrdersResponse {
   };
 }
 
+interface AnalyticsSummary {
+  turnaroundTime: {
+    averageHours: number;
+    orderCount: number;
+  };
+  peakSubmissionHours: number[];
+  statusBreakdown: Record<string, number>;
+  complaintFrequency: Record<string, number>;
+  countMismatchRate: {
+    percentage: number;
+    mismatched: number;
+    total: number;
+  };
+}
+
 export default function AdminDashboardPage() {
   const { staffToken, staffUser, staffLogout } = useStaffAuth();
   const queryClient = useQueryClient();
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'staff' | 'orders'>('staff');
+  const [activeTab, setActiveTab] = useState<'staff' | 'orders' | 'analytics'>('staff');
 
   // Staff creation modal state
   const [isCreateStaffOpen, setIsCreateStaffOpen] = useState(false);
@@ -122,7 +142,20 @@ export default function AdminDashboardPage() {
     enabled: !!staffToken && activeTab === 'orders',
   });
 
-  // 3. Create Staff Mutation
+  // 3. Fetch Analytics Query
+  const analyticsQuery = useQuery<AnalyticsSummary>({
+    queryKey: ['admin-analytics-summary'],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/admin/analytics/summary`, {
+        headers: { Authorization: `Bearer ${staffToken}` },
+      });
+      return response.data;
+    },
+    enabled: !!staffToken && activeTab === 'analytics',
+    staleTime: 1000 * 60 * 5, // 5 minutes stale time since analytics don't need continuous polling
+  });
+
+  // 4. Create Staff Mutation
   const createStaffMutation = useMutation({
     mutationFn: async () => {
       const response = await axios.post(
@@ -162,7 +195,7 @@ export default function AdminDashboardPage() {
     },
   });
 
-  // 4. Update Staff Active Status Mutation
+  // 5. Update Staff Active Status Mutation
   const toggleStaffStatusMutation = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
       const response = await axios.patch(
@@ -282,6 +315,19 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const analyticsData = analyticsQuery.data;
+  const totalOrdersInBreakdown = analyticsData
+    ? Object.values(analyticsData.statusBreakdown).reduce((acc, curr) => acc + curr, 0)
+    : 0;
+
+  const maxPeakHourCount = analyticsData
+    ? Math.max(...analyticsData.peakSubmissionHours, 1)
+    : 1;
+
+  const totalComplaints = analyticsData
+    ? Object.values(analyticsData.complaintFrequency).reduce((acc, curr) => acc + curr, 0)
+    : 0;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* Top Admin Header */}
@@ -292,7 +338,7 @@ export default function AdminDashboardPage() {
           </div>
           <div>
             <h1 className="text-sm sm:text-base font-bold tracking-tight">CLMS Admin Operations</h1>
-            <p className="text-[11px] text-slate-400">System Controls &amp; Management</p>
+            <p className="text-[11px] text-slate-400">System Controls &amp; Analytics</p>
           </div>
         </div>
 
@@ -380,7 +426,7 @@ export default function AdminDashboardPage() {
 
         {/* Tab Controls Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setActiveTab('staff')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
@@ -402,6 +448,17 @@ export default function AdminDashboardPage() {
             >
               <Package className="w-4 h-4" />
               Master Orders View
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                activeTab === 'analytics'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Analytics &amp; Metrics
             </button>
           </div>
 
@@ -433,6 +490,18 @@ export default function AdminDashboardPage() {
                 onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] })}
                 className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
                 title="Refresh master orders"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-analytics-summary'] })}
+                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                title="Refresh analytics"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -682,6 +751,271 @@ export default function AdminDashboardPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* TAB 3: ANALYTICS & METRICS */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            {analyticsQuery.isLoading ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center shadow-xs">
+                <div className="inline-block animate-spin mb-3">
+                  <RefreshCw className="w-6 h-6 text-blue-600" />
+                </div>
+                <p className="text-sm font-medium text-slate-600">Calculating system metrics &amp; analytics...</p>
+              </div>
+            ) : analyticsQuery.isError ? (
+              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center text-rose-800 shadow-xs">
+                <AlertCircle className="w-8 h-8 text-rose-600 mx-auto mb-2" />
+                <h3 className="font-bold text-base">Failed to load analytics summary</h3>
+                <p className="text-xs text-rose-600 mt-1 mb-4">
+                  {(analyticsQuery.error as any)?.response?.data?.message ||
+                    'An error occurred while fetching aggregated metrics.'}
+                </p>
+                <button
+                  onClick={() => analyticsQuery.refetch()}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition"
+                >
+                  Retry Analysis
+                </button>
+              </div>
+            ) : analyticsData ? (
+              <>
+                {/* Metric Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {/* Turnaround Time Card */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Average Turnaround
+                      </span>
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                        {analyticsData.turnaroundTime.averageHours}{' '}
+                        <span className="text-base font-semibold text-slate-500">hrs</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                        <span>Based on</span>
+                        <span className="font-semibold text-slate-800">
+                          {analyticsData.turnaroundTime.orderCount}
+                        </span>
+                        <span>collected order{analyticsData.turnaroundTime.orderCount === 1 ? '' : 's'}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Count Mismatch Rate Card */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Count Mismatch Rate
+                      </span>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                        analyticsData.countMismatchRate.percentage > 0
+                          ? 'bg-amber-50 text-amber-600'
+                          : 'bg-emerald-50 text-emerald-600'
+                      }`}>
+                        <AlertTriangle className="w-5 h-5" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                        {analyticsData.countMismatchRate.percentage}%
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                        <span className="font-semibold text-slate-800">
+                          {analyticsData.countMismatchRate.mismatched}
+                        </span>
+                        <span>of</span>
+                        <span className="font-semibold text-slate-800">
+                          {analyticsData.countMismatchRate.total}
+                        </span>
+                        <span>verified intake orders</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Total Managed Volume */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Total Orders Recorded
+                      </span>
+                      <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                        <Layers className="w-5 h-5" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                        {totalOrdersInBreakdown}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                        <span className="font-semibold text-emerald-600">
+                          {analyticsData.statusBreakdown.COLLECTED || 0}
+                        </span>
+                        <span>completed handover(s)</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Second Row: Peak Submission Hours (24-Bar Histogram) */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                    <div>
+                      <h3 className="font-bold text-base text-slate-800">Peak Submission Hours (24h)</h3>
+                      <p className="text-xs text-slate-500">
+                        Hourly distribution of student drop-offs throughout the day (00:00 – 23:00 UTC).
+                      </p>
+                    </div>
+                    <div className="text-[11px] text-slate-400 italic">
+                      *Times aggregated in server UTC
+                    </div>
+                  </div>
+
+                  {/* CSS-Based 24-Bar Histogram */}
+                  <div className="h-48 flex items-end gap-1.5 sm:gap-2 pt-6 pb-2 border-b border-slate-200">
+                    {analyticsData.peakSubmissionHours.map((count, hour) => {
+                      const heightPercent =
+                        count > 0
+                          ? Math.max(8, Math.round((count / maxPeakHourCount) * 100))
+                          : 2;
+
+                      return (
+                        <div
+                          key={hour}
+                          className="flex-1 flex flex-col items-center h-full justify-end group relative"
+                        >
+                          {/* Tooltip on hover */}
+                          <div className="opacity-0 group-hover:opacity-100 transition pointer-events-none absolute -top-8 bg-slate-900 text-white text-[10px] font-mono px-2 py-1 rounded shadow-md z-10 whitespace-nowrap">
+                            {String(hour).padStart(2, '0')}:00 UTC — {count} order{count === 1 ? '' : 's'}
+                          </div>
+
+                          {/* Bar */}
+                          <div
+                            style={{ height: `${heightPercent}%` }}
+                            className={`w-full rounded-t transition-all ${
+                              count > 0
+                                ? 'bg-blue-600 hover:bg-blue-500'
+                                : 'bg-slate-100 hover:bg-slate-200'
+                            }`}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* X-Axis Hour Labels */}
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-2">
+                    <span>00:00</span>
+                    <span className="hidden sm:inline">04:00</span>
+                    <span>08:00</span>
+                    <span className="hidden sm:inline">12:00</span>
+                    <span>16:00</span>
+                    <span className="hidden sm:inline">20:00</span>
+                    <span>23:00</span>
+                  </div>
+                </div>
+
+                {/* Third Row: Status Breakdown & Complaint Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Status Breakdown Section */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                    <h3 className="font-bold text-base text-slate-800 mb-1">Lifecycle Status Breakdown</h3>
+                    <p className="text-xs text-slate-500 mb-4">
+                      Real-time distribution of orders across active stages.
+                    </p>
+
+                    <div className="space-y-3">
+                      {Object.entries(analyticsData.statusBreakdown).map(([status, count]) => {
+                        const percent =
+                          totalOrdersInBreakdown > 0
+                            ? Math.round((count / totalOrdersInBreakdown) * 100)
+                            : 0;
+
+                        return (
+                          <div key={status} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-slate-700">{status}</span>
+                              <span className="font-mono text-slate-500">
+                                {count}{' '}
+                                <span className="text-[11px] text-slate-400">({percent}%)</span>
+                              </span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                              <div
+                                style={{ width: `${percent}%` }}
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  status === 'COLLECTED'
+                                    ? 'bg-slate-500'
+                                    : status === 'READY'
+                                    ? 'bg-emerald-500'
+                                    : status === 'PROCESSING'
+                                    ? 'bg-indigo-500'
+                                    : status === 'ACCEPTED'
+                                    ? 'bg-amber-500'
+                                    : status === 'SUBMITTED'
+                                    ? 'bg-blue-500'
+                                    : 'bg-rose-500'
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Complaint Frequency Section */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-bold text-base text-slate-800">Complaint Frequency</h3>
+                        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                          {totalComplaints} Total
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-4">
+                        Reported student discrepancies and issues categorized by type.
+                      </p>
+
+                      <div className="divide-y divide-slate-100">
+                        {Object.entries(analyticsData.complaintFrequency).map(([category, count]) => {
+                          const percent =
+                            totalComplaints > 0 ? Math.round((count / totalComplaints) * 100) : 0;
+
+                          return (
+                            <div key={category} className="py-2.5 flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-slate-400" />
+                                <span className="font-medium text-slate-700 capitalize">
+                                  {category.replace('_', ' ')}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 font-mono text-slate-600">
+                                <span className="font-semibold text-slate-900">{count}</span>
+                                <span className="text-[11px] text-slate-400">({percent}%)</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {totalComplaints === 0 && (
+                      <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                        <Inbox className="w-4 h-4" />
+                        <span>No student complaints have been logged in the system yet.</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : null}
           </div>
         )}
       </main>

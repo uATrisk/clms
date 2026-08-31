@@ -89,7 +89,7 @@
   - [x] Admin Login and unified UI dashboard connecting `/admin/dashboard`, `/staff/orders`, and `/staff/collection`.
 - [ ] **Analytics & Reporting**
   - [x] Analytics backend aggregation (`GET /api/admin/analytics/summary`)
-  - [ ] Analytics UI: Turnaround time, peak submission hours, complaint frequency
+  - [x] Analytics UI: Turnaround time, peak submission hours, complaint frequency
   - [ ] CSV / Excel export endpoint (`GET /api/admin/export`)
   - [ ] System settings management (default turnaround days, templates)
 

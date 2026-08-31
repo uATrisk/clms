@@ -92,10 +92,11 @@ export const googleAuth = async (req: Request, res: Response, next: NextFunction
       throw error;
     }
 
-    // Domain restriction: only @rishihood.edu.in allowed
+    // Domain restriction: @rishihood.edu.in or subdomains (e.g. @nst.rishihood.edu.in)
     const email = payload?.email;
-    const domain = email?.split('@')[1];
-    if (domain !== 'rishihood.edu.in') {
+    const domain = email ? email.split('@')[1] : '';
+    const isAllowed = domain === 'rishihood.edu.in' || domain.endsWith('.rishihood.edu.in');
+    if (!isAllowed) {
       const error = new Error('Access denied: Only @rishihood.edu.in accounts are authorized') as AppError;
       error.status = 403;
       throw error;

@@ -1,10 +1,13 @@
 import { Router } from 'express';
 import { submitOrder, trackOrder } from '../controllers/order-controller';
+import { authenticate, authorize } from '../middlewares/auth-middleware';
 
 const router = Router();
 
-// Public endpoints
-router.post('/', submitOrder);
-router.get('/track/:orderCode', trackOrder);
+// Student-only endpoints
+router.post('/', authenticate, authorize(['STUDENT']), submitOrder);
+
+// Tracking endpoint accessible by STUDENT (owner) or STAFF
+router.get('/track/:orderCode', authenticate, trackOrder);
 
 export default router;

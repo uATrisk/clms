@@ -5,10 +5,9 @@ import { prisma } from '../index';
 import { generateOrderCode } from '../utils/generate-code';
 import { logStatusChange } from '../utils/status-logger';
 import { AppError } from '../middlewares/error-handler';
+import { AuthenticatedRequest } from '../middlewares/auth-middleware';
 
 const orderSubmissionSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email().optional(),
   collegeId: z.string().optional(),
   bagNumber: z.string().min(1, 'Bag number is required'),
   mobileNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Valid mobile number required'),
@@ -25,39 +24,36 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
       throw error;
     }
 
-    const { name, email, collegeId, bagNumber, mobileNumber, selfReportedCount } = parsed.data;
+    const { collegeId, bagNumber, mobileNumber, selfReportedCount } = parsed.data;
+    const authReq = req as AuthenticatedRequest;
+    const userEmail = authReq.user?.email;
 
-    // Check if student exists by bagNumber + mobileNumber, or create a new student record
-    let student = await prisma.student.findFirst({
-      where: {
-        OR: [
-          ...(email ? [{ email }] : []),
-          { bagNumber, mobileNumber }
-        ]
-      }
+    if (!userEmail) {
+      const error = new Error('Unauthorized: No verified email in token') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    // Resolve the student by the verified Google email
+    let student = await prisma.student.findUnique({
+      where: { email: userEmail }
     });
 
     if (!student) {
-      student = await prisma.student.create({
-        data: {
-          name,
-          email: email || `${bagNumber.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now()}@rishihood.edu.in`,
-          collegeId: collegeId || null,
-          bagNumber,
-          mobileNumber
-        }
-      });
-    } else {
-      // Update name/collegeId if changed
-      student = await prisma.student.update({
-        where: { id: student.id },
-        data: {
-          name,
-          ...(collegeId ? { collegeId } : {}),
-          ...(email ? { email } : {})
-        }
-      });
+      const error = new Error('Student record not found for this identity') as AppError;
+      error.status = 404;
+      throw error;
     }
+
+    // Update their operational details based on the physical drop-off
+    student = await prisma.student.update({
+      where: { id: student.id },
+      data: {
+        ...(collegeId ? { collegeId } : {}),
+        bagNumber,
+        mobileNumber
+      }
+    });
 
     // Generate unique order code
     let orderCode = generateOrderCode();
@@ -105,7 +101,7 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
         status: order.status,
         submittedAt: order.submittedAt,
         student: {
-          name: order.student.name,
+          name: order.student.name, // Using verified Google name
           mobileNumber: order.student.mobileNumber,
           collegeId: order.student.collegeId
         }
@@ -120,6 +116,7 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
 export const trackOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const orderCode = req.params.orderCode as string;
+    const authReq = req as AuthenticatedRequest;
 
     if (!orderCode) {
       const error = new Error('Order code is required') as AppError;
@@ -167,7 +164,16 @@ export const trackOrder = async (req: Request, res: Response, next: NextFunction
       throw error;
     }
 
-    // Mask phone number for privacy on public tracking page (e.g. +91 ******3210)
+    // Access control: if user is STUDENT, they can only view their own
+    if (authReq.user && authReq.user.role === 'STUDENT') {
+      if (order.studentId !== authReq.user.id) {
+        const error = new Error('Forbidden: Cannot track another student\'s order') as AppError;
+        error.status = 403;
+        throw error;
+      }
+    }
+
+    // Mask phone number for privacy on tracking page
     const phone = order.student.mobileNumber;
     const maskedMobile = phone.length > 4
       ? phone.slice(0, 3) + '*'.repeat(phone.length - 7 > 0 ? phone.length - 7 : 3) + phone.slice(-4)

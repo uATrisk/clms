@@ -1,7 +1,7 @@
 # Project Progress Tracker
 
 ## Known Issues — Must Fix Next Session
-1. **CRITICAL:** `POST /api/orders` currently auto-generates a fake `@rishihood.edu.in` email for students who submit without a real Google-verified identity, to satisfy the new required unique email constraint. This defeats tonight's Google Auth decision — anonymous/spoofed submissions are still possible. Must decide: does `/api/orders` require a valid student JWT (from Google auth) before accepting a submission, or not? This is blocking correct frontend integration.
+1. [RESOLVED] Enforced authenticated student JWT requirement on `POST /api/orders` and `GET /api/orders/track/:orderCode` (with ownership checks), eliminating placeholder/fake email generation entirely.
 2. [RESOLVED] Fixed messy email migration by generating a clean migration file (`20260831100000_add_student_email`) matching schema definitions and marking it resolved via `prisma migrate resolve --applied`.
 
 ---
@@ -29,7 +29,7 @@
   - [x] Implement Public Order Submission (`POST /api/orders`)
   - [x] Implement Public Order Tracking API (`GET /api/orders/track/:orderCode`)
   - [x] Implement `status_history` auto-logging middleware/utility
-- [ ] **Frontend: Student UI (Public)**
+- [x] **Frontend: Student UI (Public)**
   - [x] Set up React + Vite + Tailwind + shadcn/ui framework
   - [x] Build Landing Page (Track / Submit navigation)
   - [x] Build Registration-Free Laundry Submission Form
@@ -44,19 +44,19 @@
   - [x] Integrate `google-auth-library` functionality
   - [x] Expose `POST /api/auth/google` for ID token verification & domain checks
   - [x] Backfill/Migrate existing test student definitions safely
-- [ ] **Frontend Identity Provider**
-  - [ ] Implement `GoogleOAuthProvider` and frontend sign-in modal
-  - [ ] Intercept `/submit` and `/track` flows with Google Auth guard
-  - [ ] Modify API dispatch layer to attach student JWT to requests
+- [x] **Frontend Identity Provider**
+  - [x] Implement `GoogleOAuthProvider` and frontend sign-in page (`/login`)
+  - [x] Intercept `/submit` and `/track` flows with Google Auth guard (`ProtectedRoute`)
+  - [x] Modify API dispatch layer to attach student JWT to requests
 
 ---
 
 ### Phase 2: Washer & Collection Dashboards, Status Lifecycle & OTP Flow
 - [ ] **Washer Dashboard**
   - [ ] Staff Login View
-  - [ ] Live incoming requests queue (`GET /api/staff/orders/queue`)
-  - [ ] Order Acceptance & dual-count verification UI (`PATCH /api/staff/orders/:id/accept`)
-  - [ ] Count mismatch auto-flagging logic
+  - [x] Live incoming requests queue (`GET /api/staff/orders/queue`)
+  - [x] Order Acceptance & dual-count verification UI (`PATCH /api/staff/orders/:id/accept` - Backend implemented; frontend UI pending)
+  - [x] Count mismatch auto-flagging logic
   - [ ] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date setting
   - [ ] Status update: Mark Ready (triggers OTP generation)
   - [ ] Bulk status update feature

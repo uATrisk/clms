@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import clsx from 'clsx';
+import { useAuth } from '../contexts/auth-context';
 
 type OrderStatus =
   | 'SUBMITTED'
@@ -51,11 +52,19 @@ const LIFECYCLE_STEPS: OrderStatus[] = ['SUBMITTED', 'ACCEPTED', 'PROCESSING', '
 
 export default function TrackDetailsPage() {
   const { orderCode } = useParams<{ orderCode: string }>();
+  const { token } = useAuth();
 
   const { data, isLoading, isError, error } = useQuery<TrackResponse>({
-    queryKey: ['order', orderCode],
+    queryKey: ['order', orderCode, token],
     queryFn: async () => {
-      const res = await axios.get(`http://localhost:4000/api/orders/track/${orderCode}`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/orders/track/${orderCode}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       return res.data;
     },
     refetchInterval: 20000,
@@ -78,10 +87,16 @@ export default function TrackDetailsPage() {
         <div className="w-full max-w-md bg-white rounded-2xl shadow p-8 text-center space-y-4">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
           <h1 className="text-xl font-bold text-gray-900">
-            {status === 404 ? 'Order Not Found' : 'Something went wrong'}
+            {status === 403
+              ? 'Access Denied'
+              : status === 404
+              ? 'Order Not Found'
+              : 'Something went wrong'}
           </h1>
           <p className="text-gray-500 text-sm leading-relaxed">
-            {status === 404
+            {status === 403
+              ? 'You do not have permission to view this order. You can only track orders placed by your account.'
+              : status === 404
               ? `We couldn't find an order with code "${orderCode}". Please check for typos and try again.`
               : 'Failed to fetch tracking details. Please try again later.'}
           </p>

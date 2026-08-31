@@ -146,3 +146,24 @@ We are adopting Google Sign-In as the mandatory authentication mechanism for stu
 
 ### Status
 Accepted
+
+**Amendment (2026-08-31):** Corrected the domain validation check to support official university subdomains (such as `nst.rishihood.edu.in` or `ds.rishihood.edu.in`). The backend domain restriction now validates that the email domain is exactly `rishihood.edu.in` OR securely ends with `.rishihood.edu.in` (`domain === 'rishihood.edu.in' || domain.endsWith('.rishihood.edu.in')`), preventing unauthorized access from non-university domains while admitting all departmental and school subdomains.
+
+---
+
+## [2026-08-31] ADR 008: Adoption of @react-oauth/google for Frontend Google Identity Services
+
+### Context
+Following ADR 007's decision to adopt Google Sign-In for student authentication restricted to `@rishihood.edu.in`, we needed a React wrapper for Google Identity Services (GIS) on the frontend. The library needs to handle client-side script loading, the "Sign in with Google" button rendering, One Tap prompts, and safe retrieval of the Google ID token (`credential`) to exchange with our backend API (`POST /api/auth/google`).
+
+### Decision
+We adopted `@react-oauth/google` as the official client library for Google OAuth in the React frontend.
+
+### Rationale
+- **Official Google Identity Services (GIS) Alignment**: It wraps modern Google Identity Services rather than deprecated legacy Google Sign-In (`gapi.auth2`).
+- **Declarative React Components & Hooks**: Provides the `GoogleOAuthProvider` context and `<GoogleLogin />` component out-of-the-box, supporting custom button themes, shapes, sizes, and One Tap integrations without manual DOM script injection.
+- **Lightweight Footprint**: Has zero heavyweight external dependencies and integrates smoothly with our custom `AuthProvider` and React Router route guards.
+
+### Status
+Accepted
+

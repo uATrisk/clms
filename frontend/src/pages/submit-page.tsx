@@ -5,10 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '../contexts/auth-context';
 
-// Validation schema
+// Validation schema (name removed, it comes from auth)
 const submitSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
   collegeId: z.string().optional(),
   bagNumber: z.string().min(1, 'Bag number is required'),
   mobileNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Enter a valid mobile number (e.g. 9876543210)'),
@@ -23,6 +23,7 @@ type SubmitFormOutput = z.output<typeof submitSchema>;
 
 export default function SubmitPage() {
   const navigate = useNavigate();
+  const { token, user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -32,9 +33,8 @@ export default function SubmitPage() {
   } = useForm<SubmitFormInput, unknown, SubmitFormOutput>({
     resolver: zodResolver(submitSchema),
     defaultValues: {
-      name: '',
       collegeId: '',
-      bagNumber: '',
+      bagNumber: user?.bagNumber && !user.bagNumber.startsWith('BAG-') ? user.bagNumber : '', // Don't autofill if it's the random placeholder
       mobileNumber: '',
       selfReportedCount: '' as unknown as number
     }
@@ -44,7 +44,15 @@ export default function SubmitPage() {
     setServerError(null);
     try {
       // Connect to backend api
-      const response = await axios.post('http://localhost:4000/api/orders', data);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/orders`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       const { order } = response.data;
 
       // On success, redirect to the track result page
@@ -53,6 +61,7 @@ export default function SubmitPage() {
       }
     } catch (error: any) {
       const message = error.response?.data?.error?.message
+        || error.response?.data?.message
         || error.message
         || 'An unexpected error occurred. Please try again.';
       setServerError(message);
@@ -74,7 +83,7 @@ export default function SubmitPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Drop off Laundry</h1>
           <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-            Submit a new laundry request. You don't need an account—just your bag number and mobile number for verification.
+            Submit a new laundry request. Verified under {user?.email}.
           </p>
         </div>
 
@@ -92,25 +101,6 @@ export default function SubmitPage() {
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-          {/* Name */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
-            <input
-              id="name"
-              {...register('name')}
-              placeholder="e.g. Alex Student"
-              disabled={isSubmitting}
-              className={`w-full p-2.5 border rounded-lg outline-none transition-all focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
-                errors.name ? 'border-red-300 focus:ring-red-500 text-red-900' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-              }`}
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-            )}
-          </div>
-
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {/* Bag Number */}
             <div>
@@ -120,7 +110,7 @@ export default function SubmitPage() {
               <input
                 id="bagNumber"
                 {...register('bagNumber')}
-                placeholder="e.g. BAG-320"
+                placeholder="e.g. 102A"
                 disabled={isSubmitting}
                 className={`w-full p-2.5 border rounded-lg outline-none transition-all uppercase focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
                   errors.bagNumber ? 'border-red-300 focus:ring-red-500 text-red-900' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'

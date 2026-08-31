@@ -4,7 +4,7 @@
 CLMS is a registration-free web application designed to replace a manual, untracked college laundry process with a transparent, trackable, and verifiable digital system. It connects students, laundry staff, and the collection center by utilizing a combination of a pre-assigned Bag Number and a Mobile Number to establish identity, completely eliminating the need for app installs, student account creation, or QR/hardware scanners.
 
 ## Tech Stack
-- **Frontend:** React.js (Vite), TypeScript, Tailwind CSS, TanStack Query, React Router v7, React Hook Form + Zod, axios, clsx, tailwind-merge, shadcn/ui, lucide-react.
+- **Frontend:** React.js (Vite), TypeScript, Tailwind CSS, TanStack Query, React Router v7, React Hook Form + Zod, @react-oauth/google, axios, clsx, tailwind-merge, shadcn/ui, lucide-react.
 - **Backend:** Node.js, Express.js, TypeScript, Zod for validation.
 - **Database:** PostgreSQL.
 - **ORM:** Prisma.

@@ -8,6 +8,7 @@ import { errorHandler } from './middlewares/error-handler';
 import healthRouter from './routes/health-router';
 import authRouter from './routes/auth-router';
 import orderRouter from './routes/order-router';
+import staffRouter from './routes/staff-router';
 
 // Load environment config
 dotenv.config();
@@ -38,6 +39,7 @@ app.use(pinoHttp({
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/orders', orderRouter);
+app.use('/api/staff', staffRouter);
 
 // Undefined routes handler
 app.use((req: Request, res: Response, next: NextFunction) => {

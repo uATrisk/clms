@@ -83,9 +83,9 @@
 ---
 
 ### Phase 4: Admin Dashboard, Analytics & Export
-- [ ] **Admin Management & Controls**
-  - [ ] Staff account management CRUD (`POST/PATCH /api/admin/staff`)
-  - [ ] Master order view with filters by status, date, and hostel block (`GET /api/admin/orders`)
+- [x] **Admin Management & Controls**
+  - [x] Staff account management CRUD (`POST/PATCH /api/admin/staff`, `GET /api/admin/staff`)
+  - [x] Master order view with filters by status, date (`GET /api/admin/orders`)
 - [ ] **Analytics & Reporting**
   - [ ] Analytics backend aggregation (`GET /api/admin/analytics/summary`)
   - [ ] Analytics UI: Turnaround time, peak submission hours, complaint frequency

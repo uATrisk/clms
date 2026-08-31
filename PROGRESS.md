@@ -68,12 +68,13 @@
 ---
 
 ### Phase 3: Complaints Module & Notifications Integration
-- [ ] **Complaints System**
+- [x] **Complaints System**
   - [x] Public complaint submission endpoint (`POST /api/orders/:orderCode/complaint`)
   - [x] Student-facing "Raise Complaint" form with category selection
   - [ ] Cloudinary/S3 integration for photo proof upload (Deferred — `photoUrl` left null in v1)
   - [x] Admin complaint queue API (`GET /api/admin/complaints`)
   - [x] Admin complaint resolution endpoint (`PATCH /api/admin/complaints/:id`)
+  - [x] Admin complaint management UI tab with status filters, audit tracking, and resolution modal
 - [ ] **Notifications Service**
   - [ ] Pluggable SMS/Notification service adapter (Twilio / MSG91 / Fast2SMS)
   - [ ] Notification triggers on order submission, acceptance, delay, and ready for pickup

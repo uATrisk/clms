@@ -23,6 +23,9 @@ import {
   AlertTriangle,
   Layers,
   Inbox,
+  MessageSquare,
+  CheckSquare,
+  ArrowUpRight,
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -69,6 +72,55 @@ interface OrdersResponse {
   };
 }
 
+type ComplaintCategory =
+  | 'MISSING'
+  | 'DAMAGED'
+  | 'WRONG_COUNT'
+  | 'WRONG_BAG'
+  | 'NOT_READY'
+  | 'OTHER';
+
+type ComplaintStatus = 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED' | 'ESCALATED';
+
+interface ComplaintItem {
+  id: string;
+  category: ComplaintCategory;
+  description: string;
+  status: ComplaintStatus;
+  raisedAt: string;
+  resolvedAt?: string | null;
+  resolutionNote?: string | null;
+  order: {
+    id: string;
+    orderCode: string;
+    bagNumber: string;
+    status: string;
+    student: {
+      id: string;
+      name: string;
+      email: string;
+      bagNumber: string;
+      mobileNumber: string;
+      collegeId?: string | null;
+    };
+  };
+  handledBy?: {
+    id: string;
+    name: string;
+    username: string;
+  } | null;
+}
+
+interface ComplaintsResponse {
+  complaints: ComplaintItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
 interface AnalyticsSummary {
   turnaroundTime: {
     averageHours: number;
@@ -89,7 +141,7 @@ export default function AdminDashboardPage() {
   const queryClient = useQueryClient();
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'staff' | 'orders' | 'analytics'>('staff');
+  const [activeTab, setActiveTab] = useState<'staff' | 'orders' | 'complaints' | 'analytics'>('staff');
 
   // Staff creation modal state
   const [isCreateStaffOpen, setIsCreateStaffOpen] = useState(false);
@@ -109,6 +161,16 @@ export default function AdminDashboardPage() {
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
   const [orderPage, setOrderPage] = useState<number>(1);
   const orderLimit = 20;
+
+  // Complaints Tab filters, pagination & resolve modal state
+  const [complaintStatusFilter, setComplaintStatusFilter] = useState<string>('');
+  const [complaintPage, setComplaintPage] = useState<number>(1);
+  const complaintLimit = 20;
+
+  const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
+  const [activeComplaintForResolve, setActiveComplaintForResolve] = useState<ComplaintItem | null>(null);
+  const [resolutionNoteText, setResolutionNoteText] = useState('');
+  const [resolveModalError, setResolveModalError] = useState<string | null>(null);
 
   // 1. Fetch Staff List Query
   const staffQuery = useQuery<StaffMember[]>({
@@ -142,7 +204,27 @@ export default function AdminDashboardPage() {
     enabled: !!staffToken && activeTab === 'orders',
   });
 
-  // 3. Fetch Analytics Query
+  // 3. Fetch Complaints List Query
+  const complaintsQuery = useQuery<ComplaintsResponse>({
+    queryKey: ['admin-complaints', complaintPage, complaintLimit, complaintStatusFilter],
+    queryFn: async () => {
+      const params: Record<string, string | number> = {
+        page: complaintPage,
+        limit: complaintLimit,
+      };
+      if (complaintStatusFilter) {
+        params.status = complaintStatusFilter;
+      }
+      const response = await axios.get(`${API_BASE_URL}/admin/complaints`, {
+        params,
+        headers: { Authorization: `Bearer ${staffToken}` },
+      });
+      return response.data;
+    },
+    enabled: !!staffToken && activeTab === 'complaints',
+  });
+
+  // 4. Fetch Analytics Query
   const analyticsQuery = useQuery<AnalyticsSummary>({
     queryKey: ['admin-analytics-summary'],
     queryFn: async () => {
@@ -152,10 +234,10 @@ export default function AdminDashboardPage() {
       return response.data;
     },
     enabled: !!staffToken && activeTab === 'analytics',
-    staleTime: 1000 * 60 * 5, // 5 minutes stale time since analytics don't need continuous polling
+    staleTime: 1000 * 60 * 5,
   });
 
-  // 4. Create Staff Mutation
+  // 5. Create Staff Mutation
   const createStaffMutation = useMutation({
     mutationFn: async () => {
       const response = await axios.post(
@@ -195,7 +277,7 @@ export default function AdminDashboardPage() {
     },
   });
 
-  // 5. Update Staff Active Status Mutation
+  // 6. Update Staff Active Status Mutation
   const toggleStaffStatusMutation = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
       const response = await axios.patch(
@@ -226,6 +308,57 @@ export default function AdminDashboardPage() {
     },
   });
 
+  // 7. Update Complaint Mutation
+  const updateComplaintMutation = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+      resolutionNote,
+    }: {
+      id: string;
+      status: 'UNDER_REVIEW' | 'RESOLVED' | 'ESCALATED';
+      resolutionNote?: string;
+    }) => {
+      const response = await axios.patch(
+        `${API_BASE_URL}/admin/complaints/${id}`,
+        {
+          status,
+          ...(resolutionNote !== undefined ? { resolutionNote: resolutionNote.trim() } : {}),
+        },
+        {
+          headers: { Authorization: `Bearer ${staffToken}` },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-complaints'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics-summary'] });
+      setIsResolveModalOpen(false);
+      setActiveComplaintForResolve(null);
+      setResolutionNoteText('');
+      setResolveModalError(null);
+      setNotification({
+        type: 'success',
+        message: `Complaint marked as ${variables.status.replace('_', ' ')}.`,
+      });
+    },
+    onError: (err: any) => {
+      const message =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        'Failed to update complaint status.';
+      if (activeComplaintForResolve) {
+        setResolveModalError(message);
+      } else {
+        setNotification({
+          type: 'error',
+          message,
+        });
+      }
+    },
+  });
+
   const handleCreateStaffSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStaffName.trim() || !newStaffUsername.trim() || !newStaffPassword.trim()) {
@@ -249,6 +382,28 @@ export default function AdminDashboardPage() {
       return;
     }
     toggleStaffStatusMutation.mutate({ id: staff.id, active: !staff.active });
+  };
+
+  const handleOpenResolveModal = (complaint: ComplaintItem) => {
+    setActiveComplaintForResolve(complaint);
+    setResolutionNoteText('');
+    setResolveModalError(null);
+    setIsResolveModalOpen(true);
+  };
+
+  const handleConfirmResolve = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeComplaintForResolve) return;
+    if (!resolutionNoteText.trim()) {
+      setResolveModalError('A resolution note is required when resolving a complaint.');
+      return;
+    }
+    setResolveModalError(null);
+    updateComplaintMutation.mutate({
+      id: activeComplaintForResolve.id,
+      status: 'RESOLVED',
+      resolutionNote: resolutionNoteText.trim(),
+    });
   };
 
   const formatDate = (dateStr?: string) => {
@@ -299,6 +454,55 @@ export default function AdminDashboardPage() {
         return 'bg-gray-100 text-gray-500 border-gray-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const getComplaintStatusBadge = (status: ComplaintStatus) => {
+    switch (status) {
+      case 'OPEN':
+        return {
+          label: 'Open',
+          className: 'bg-amber-50 text-amber-700 border-amber-200',
+        };
+      case 'UNDER_REVIEW':
+        return {
+          label: 'Under Review',
+          className: 'bg-blue-50 text-blue-700 border-blue-200',
+        };
+      case 'RESOLVED':
+        return {
+          label: 'Resolved',
+          className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        };
+      case 'ESCALATED':
+        return {
+          label: 'Escalated',
+          className: 'bg-rose-50 text-rose-700 border-rose-200',
+        };
+      default:
+        return {
+          label: status,
+          className: 'bg-slate-50 text-slate-700 border-slate-200',
+        };
+    }
+  };
+
+  const formatCategory = (category: string) => {
+    switch (category) {
+      case 'MISSING':
+        return 'Missing Items';
+      case 'DAMAGED':
+        return 'Damaged Clothes';
+      case 'WRONG_COUNT':
+        return 'Wrong Count';
+      case 'WRONG_BAG':
+        return 'Wrong Bag';
+      case 'NOT_READY':
+        return 'Not Ready / Delayed';
+      case 'OTHER':
+        return 'Other Issue';
+      default:
+        return category.replace('_', ' ');
     }
   };
 
@@ -450,6 +654,17 @@ export default function AdminDashboardPage() {
               Master Orders View
             </button>
             <button
+              onClick={() => setActiveTab('complaints')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                activeTab === 'complaints'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              Complaints &amp; Disputes
+            </button>
+            <button
               onClick={() => setActiveTab('analytics')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
                 activeTab === 'analytics'
@@ -490,6 +705,18 @@ export default function AdminDashboardPage() {
                 onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] })}
                 className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
                 title="Refresh master orders"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {activeTab === 'complaints' && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-complaints'] })}
+                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                title="Refresh complaints list"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -615,7 +842,7 @@ export default function AdminDashboardPage() {
                   value={orderStatusFilter}
                   onChange={(e) => {
                     setOrderStatusFilter(e.target.value);
-                    setOrderPage(1); // Reset to first page
+                    setOrderPage(1);
                   }}
                   className="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600"
                 >
@@ -754,7 +981,249 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 3: ANALYTICS & METRICS */}
+        {/* TAB 3: COMPLAINTS MANAGEMENT */}
+        {activeTab === 'complaints' && (
+          <div className="space-y-4">
+            {/* Filter Toolbar */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Filter className="w-4 h-4 text-slate-400" />
+                <label htmlFor="complaint-status-filter" className="text-xs font-semibold text-slate-600">
+                  Filter by Status:
+                </label>
+                <select
+                  id="complaint-status-filter"
+                  value={complaintStatusFilter}
+                  onChange={(e) => {
+                    setComplaintStatusFilter(e.target.value);
+                    setComplaintPage(1);
+                  }}
+                  className="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="OPEN">OPEN</option>
+                  <option value="UNDER_REVIEW">UNDER REVIEW</option>
+                  <option value="RESOLVED">RESOLVED</option>
+                  <option value="ESCALATED">ESCALATED</option>
+                </select>
+              </div>
+
+              {complaintsQuery.data?.pagination && (
+                <div className="text-xs text-slate-500">
+                  Showing {complaintsQuery.data.complaints.length} of{' '}
+                  <span className="font-semibold text-slate-800">
+                    {complaintsQuery.data.pagination.totalCount}
+                  </span>{' '}
+                  complaints
+                </div>
+              )}
+            </div>
+
+            {/* Complaints List Table */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+              {complaintsQuery.isLoading ? (
+                <div className="p-12 text-center text-slate-400">Loading student complaints...</div>
+              ) : complaintsQuery.data?.complaints?.length === 0 ? (
+                <div className="p-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                  <Inbox className="w-8 h-8 text-slate-300" />
+                  <p className="text-sm font-medium">No complaints match the selected filter.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-600">
+                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                      <tr>
+                        <th className="py-3.5 px-4">Category &amp; Raised</th>
+                        <th className="py-3.5 px-4">Order / Bag</th>
+                        <th className="py-3.5 px-4">Student Details</th>
+                        <th className="py-3.5 px-4 max-w-xs">Description</th>
+                        <th className="py-3.5 px-4">Status &amp; Handling</th>
+                        <th className="py-3.5 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {complaintsQuery.data?.complaints.map((complaint) => {
+                        const badge = getComplaintStatusBadge(complaint.status);
+                        const isActionable = complaint.status === 'OPEN' || complaint.status === 'UNDER_REVIEW';
+
+                        return (
+                          <tr key={complaint.id} className="hover:bg-slate-50/80 transition align-top">
+                            {/* Category & Date */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="font-semibold text-slate-900 text-xs">
+                                {formatCategory(complaint.category)}
+                              </div>
+                              <div className="text-[11px] text-slate-400 mt-0.5">
+                                {formatDateTime(complaint.raisedAt)}
+                              </div>
+                            </td>
+
+                            {/* Order & Bag */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="font-mono font-bold text-slate-900 text-xs">
+                                {complaint.order.orderCode}
+                              </div>
+                              <div className="mt-1">
+                                <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px]">
+                                  {complaint.order.bagNumber}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Student */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="text-slate-900 font-medium text-xs">
+                                {complaint.order.student.name}
+                              </div>
+                              <div className="text-[11px] text-slate-400">
+                                {complaint.order.student.email}
+                              </div>
+                              <div className="text-[11px] text-slate-500 font-mono">
+                                {complaint.order.student.mobileNumber}
+                              </div>
+                            </td>
+
+                            {/* Description & Resolution Notes */}
+                            <td className="py-3.5 px-4 max-w-xs">
+                              <p
+                                className="text-xs text-slate-800 line-clamp-2 leading-relaxed"
+                                title={complaint.description}
+                              >
+                                {complaint.description}
+                              </p>
+                              {complaint.status === 'RESOLVED' && complaint.resolutionNote && (
+                                <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs space-y-0.5">
+                                  <span className="font-semibold text-emerald-900 block text-[11px]">
+                                    Resolution Note:
+                                  </span>
+                                  <p
+                                    className="text-emerald-800 text-xs leading-relaxed"
+                                    title={complaint.resolutionNote}
+                                  >
+                                    {complaint.resolutionNote}
+                                  </p>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Status Badge & Handler */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center text-xs font-bold px-2.5 py-0.5 rounded-full border ${badge.className}`}
+                              >
+                                {badge.label}
+                              </span>
+                              {complaint.handledBy && (
+                                <div className="text-[11px] text-slate-400 mt-1">
+                                  Handled by: <span className="font-medium text-slate-600">@{complaint.handledBy.username}</span>
+                                </div>
+                              )}
+                              {complaint.resolvedAt && (
+                                <div className="text-[11px] text-slate-400">
+                                  Resolved: {formatDate(complaint.resolvedAt)}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Action Buttons */}
+                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                              {isActionable ? (
+                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                  {complaint.status === 'OPEN' && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        updateComplaintMutation.mutate({
+                                          id: complaint.id,
+                                          status: 'UNDER_REVIEW',
+                                        })
+                                      }
+                                      disabled={updateComplaintMutation.isPending}
+                                      className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition"
+                                      title="Mark under investigation"
+                                    >
+                                      Under Review
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenResolveModal(complaint)}
+                                    disabled={updateComplaintMutation.isPending}
+                                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition flex items-center gap-1"
+                                    title="Provide resolution and close complaint"
+                                  >
+                                    <CheckSquare className="w-3.5 h-3.5" />
+                                    Resolve
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateComplaintMutation.mutate({
+                                        id: complaint.id,
+                                        status: 'ESCALATED',
+                                      })
+                                    }
+                                    disabled={updateComplaintMutation.isPending}
+                                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition flex items-center gap-1"
+                                    title="Escalate issue to supervisory review"
+                                  >
+                                    <ArrowUpRight className="w-3.5 h-3.5" />
+                                    Escalate
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">Read-only</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {complaintsQuery.data?.pagination && complaintsQuery.data.pagination.totalPages > 1 && (
+                <div className="p-4 border-t border-slate-200 bg-slate-50/60 flex items-center justify-between">
+                  <div className="text-xs text-slate-500">
+                    Page {complaintsQuery.data.pagination.page} of{' '}
+                    {complaintsQuery.data.pagination.totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setComplaintPage((p) => Math.max(1, p - 1))}
+                      disabled={complaintPage <= 1 || complaintsQuery.isFetching}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Prev
+                    </button>
+                    <button
+                      onClick={() =>
+                        setComplaintPage((p) =>
+                          Math.min(complaintsQuery.data?.pagination.totalPages || 1, p + 1)
+                        )
+                      }
+                      disabled={
+                        complaintPage >= (complaintsQuery.data?.pagination.totalPages || 1) ||
+                        complaintsQuery.isFetching
+                      }
+                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: ANALYTICS & METRICS */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             {analyticsQuery.isLoading ? (
@@ -1126,6 +1595,95 @@ export default function AdminDashboardPage() {
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-blue-400"
                 >
                   {createStaffMutation.isPending ? 'Saving...' : 'Create Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* RESOLVE COMPLAINT MODAL */}
+      {isResolveModalOpen && activeComplaintForResolve && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <CheckSquare className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <h3 className="font-bold text-base">Resolve Student Complaint</h3>
+                  <p className="text-xs text-slate-400">
+                    Order #{activeComplaintForResolve.order.orderCode} •{' '}
+                    {formatCategory(activeComplaintForResolve.category)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (!updateComplaintMutation.isPending) setIsResolveModalOpen(false);
+                }}
+                disabled={updateComplaintMutation.isPending}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmResolve} className="p-6 space-y-4">
+              {resolveModalError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-rose-700 text-xs">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{resolveModalError}</span>
+                </div>
+              )}
+
+              {/* Original Complaint Context */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-xs">
+                <span className="font-semibold text-slate-700 block">
+                  Student Issue ({activeComplaintForResolve.order.student.name}):
+                </span>
+                <p className="text-slate-600 italic leading-relaxed">
+                  "{activeComplaintForResolve.description}"
+                </p>
+              </div>
+
+              {/* Resolution Note Textarea */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Resolution Note <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  value={resolutionNoteText}
+                  onChange={(e) => {
+                    setResolutionNoteText(e.target.value);
+                    if (resolveModalError && e.target.value.trim()) {
+                      setResolveModalError(null);
+                    }
+                  }}
+                  disabled={updateComplaintMutation.isPending}
+                  placeholder="Explain the resolution provided (e.g., Located missing 2 shirts in section B-4; Delivered back to student's room; Refund initiated)..."
+                  className="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-600 outline-none transition"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  This note will be recorded permanently in the audit trail and visible to the student on their tracking page.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsResolveModalOpen(false)}
+                  disabled={updateComplaintMutation.isPending}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateComplaintMutation.isPending}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-emerald-400 shadow-xs"
+                >
+                  {updateComplaintMutation.isPending ? 'Saving...' : 'Confirm Resolution'}
                 </button>
               </div>
             </form>

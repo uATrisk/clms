@@ -1,6 +1,12 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth-middleware';
-import { getStaffList, createStaff, updateStaffActiveStatus, getOrdersList } from '../controllers/admin-controller';
+import {
+  getStaffList,
+  createStaff,
+  updateStaffActiveStatus,
+  getOrdersList,
+  getAnalyticsSummary,
+} from '../controllers/admin-controller';
 
 const router = Router();
 
@@ -14,5 +20,8 @@ router.patch('/staff/:id', updateStaffActiveStatus);
 
 // Master order view
 router.get('/orders', getOrdersList);
+
+// Analytics
+router.get('/analytics/summary', getAnalyticsSummary);
 
 export default router;

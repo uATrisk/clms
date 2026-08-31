@@ -247,3 +247,124 @@ export const getOrdersList = async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 };
+
+export const getAnalyticsSummary = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // 1. Turnaround Time
+    const collectedOrders = await prisma.order.findMany({
+      where: {
+        status: 'COLLECTED',
+        collectedAt: { not: null },
+      },
+      select: {
+        submittedAt: true,
+        collectedAt: true,
+      },
+    });
+
+    let totalHours = 0;
+    for (const order of collectedOrders) {
+      if (order.collectedAt) {
+        const diffMs = order.collectedAt.getTime() - order.submittedAt.getTime();
+        totalHours += diffMs / (1000 * 60 * 60);
+      }
+    }
+    const averageHours =
+      collectedOrders.length > 0
+        ? Number((totalHours / collectedOrders.length).toFixed(2))
+        : 0;
+
+    // 2. Peak Submission Hours
+    // Note: uses UTC/server time for hour extraction as requested
+    const allOrdersSubmissionTimes = await prisma.order.findMany({
+      select: { submittedAt: true },
+    });
+    const peakSubmissionHours = new Array(24).fill(0);
+    for (const order of allOrdersSubmissionTimes) {
+      const hour = order.submittedAt.getUTCHours();
+      peakSubmissionHours[hour]++;
+    }
+
+    // 3. Status Breakdown
+    const statusCountsResult = await prisma.order.groupBy({
+      by: ['status'],
+      _count: {
+        _all: true,
+      },
+    });
+    const statusBreakdown: Record<string, number> = {
+      SUBMITTED: 0,
+      ACCEPTED: 0,
+      PROCESSING: 0,
+      DELAYED: 0,
+      READY: 0,
+      COLLECTED: 0,
+      COMPLAINT_RAISED: 0,
+      UNDER_REVIEW: 0,
+      RESOLVED: 0,
+      CANCELLED: 0,
+    };
+    for (const item of statusCountsResult) {
+      statusBreakdown[item.status] = item._count._all;
+    }
+
+    // 4. Complaint Frequency
+    const complaintCountsResult = await prisma.complaint.groupBy({
+      by: ['category'],
+      _count: {
+        _all: true,
+      },
+    });
+    const complaintFrequency: Record<string, number> = {
+      MISSING: 0,
+      DAMAGED: 0,
+      WRONG_COUNT: 0,
+      WRONG_BAG: 0,
+      NOT_READY: 0,
+      OTHER: 0,
+    };
+    for (const item of complaintCountsResult) {
+      complaintFrequency[item.category] = item._count._all;
+    }
+
+    // 5. Count Mismatch Rate
+    const [totalAcceptedOrLater, mismatchedCount] = await Promise.all([
+      prisma.order.count({
+        where: {
+          status: {
+            notIn: ['SUBMITTED', 'CANCELLED'],
+          },
+        },
+      }),
+      prisma.order.count({
+        where: {
+          status: {
+            notIn: ['SUBMITTED', 'CANCELLED'],
+          },
+          countMismatchFlag: true,
+        },
+      }),
+    ]);
+    const mismatchPercentage =
+      totalAcceptedOrLater > 0
+        ? Number(((mismatchedCount / totalAcceptedOrLater) * 100).toFixed(2))
+        : 0;
+
+    res.status(200).json({
+      turnaroundTime: {
+        averageHours,
+        orderCount: collectedOrders.length,
+      },
+      peakSubmissionHours,
+      statusBreakdown,
+      complaintFrequency,
+      countMismatchRate: {
+        percentage: mismatchPercentage,
+        mismatched: mismatchedCount,
+        total: totalAcceptedOrLater,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

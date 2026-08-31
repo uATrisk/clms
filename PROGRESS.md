@@ -87,7 +87,7 @@
   - [x] Staff account management CRUD (`POST/PATCH /api/admin/staff`, `GET /api/admin/staff`)
   - [x] Master order view with filters by status, date (`GET /api/admin/orders`)
 - [ ] **Analytics & Reporting**
-  - [ ] Analytics backend aggregation (`GET /api/admin/analytics/summary`)
+  - [x] Analytics backend aggregation (`GET /api/admin/analytics/summary`)
   - [ ] Analytics UI: Turnaround time, peak submission hours, complaint frequency
   - [ ] CSV / Excel export endpoint (`GET /api/admin/export`)
   - [ ] System settings management (default turnaround days, templates)

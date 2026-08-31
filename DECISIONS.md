@@ -227,3 +227,25 @@ We implemented a shared-secret Manual Admin Override mechanism for the `PATCH /a
 ### Status
 Accepted
 
+---
+
+## [2026-08-31] ADR 012: Shift from Per-Order to Per-Profile Student Identity Fields
+
+### Context
+In the original Phase 1 design, students re-entered their `mobileNumber`, `bagNumber`, and optional `collegeId` on every single order submission. In reality, laundry bags are physically issued to students once for the semester or academic year, and mobile numbers/college IDs are static attributes of student identity. Re-entering these fields on every order caused unnecessary friction, redundant validation, and risked student input typos causing desynchronization with physically tagged laundry bags.
+
+### Decision
+We moved `bagNumber`, `mobileNumber`, and `collegeId` to the `Student` profile record:
+1. **Dedicated Student Profile Endpoints:** Added `GET /api/students/me` and `PATCH /api/students/me` (both protected with `authenticate` and `authorize(['STUDENT'])`) for onboarding profile setup and subsequent profile updates.
+2. **Simplified Order Submission:** `POST /api/orders` now accepts only `selfReportedCount` in the request body. Identity attributes (`bagNumber`, `mobileNumber`, `collegeId`) are resolved directly from the authenticated student's saved profile record (`req.user.id`).
+3. **Profile Completeness Safety Net:** If a student attempts to submit an order before saving their `bagNumber` or `mobileNumber`, `POST /api/orders` immediately rejects the request with `400 Bad Request` ("Please complete your profile before submitting laundry").
+4. **Schema Adjustment:** Made `bagNumber` and `mobileNumber` nullable (`String?`) on the `Student` Prisma model to support the initial Google OAuth sign-in flow before first-time profile completion.
+
+### Rationale
+- **Frictionless Submission:** Students only specify the item count for their drop-off, dramatically speeding up submission times.
+- **Data Integrity:** Matches the physical operational model where a physical bag number is uniquely tied to a student throughout their campus stay.
+- **Single Source of Truth:** Changes to phone numbers or bag reassignment happen in one central profile location without affecting order histories.
+
+### Status
+Accepted
+

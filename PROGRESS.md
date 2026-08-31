@@ -44,6 +44,7 @@
   - [x] Integrate `google-auth-library` functionality
   - [x] Expose `POST /api/auth/google` for ID token verification & domain checks
   - [x] Backfill/Migrate existing test student definitions safely
+  - [x] Implement Profile Completeness Support (`GET/PATCH /api/students/me` & simplified `POST /api/orders`)
 - [x] **Frontend Identity Provider**
   - [x] Implement `GoogleOAuthProvider` and frontend sign-in page (`/login`)
   - [x] Intercept `/submit` and `/track` flows with Google Auth guard (`ProtectedRoute`)

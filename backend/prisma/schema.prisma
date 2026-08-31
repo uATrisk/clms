@@ -62,8 +62,8 @@ model Student {
   name          String
   email         String   @unique
   collegeId     String?  @map("college_id")
-  bagNumber     String   @map("bag_number")
-  mobileNumber  String   @map("mobile_number")
+  bagNumber     String?  @map("bag_number")
+  mobileNumber  String?  @map("mobile_number")
   createdAt     DateTime @default(now()) @map("created_at")
 
   // Relations

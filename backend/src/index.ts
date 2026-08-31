@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { errorHandler } from './middlewares/error-handler';
 import healthRouter from './routes/health-router';
 import authRouter from './routes/auth-router';
+import studentRouter from './routes/student-router';
 import orderRouter from './routes/order-router';
 import staffRouter from './routes/staff-router';
 import adminRouter from './routes/admin-router';
@@ -39,6 +40,7 @@ app.use(pinoHttp({
 // Routes
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/students', studentRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/staff', staffRouter);
 app.use('/api/admin', adminRouter);

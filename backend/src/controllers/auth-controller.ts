@@ -108,18 +108,18 @@ export const googleAuth = async (req: Request, res: Response, next: NextFunction
     });
 
     if (!student) {
-      // Create new student with random bag number assignment (to be assigned later by washer)
+      // Create new student without a pre-assigned bag number (profile incomplete)
       student = await prisma.student.create({
         data: {
           name: payload?.name || 'Student',
           email: email!,
-          collegeId: null, // To be filled during order submission if needed
-          bagNumber: `BAG-${Math.floor(Math.random() * 9000) + 1000}`, // Placeholder - reassignable
-          mobileNumber: payload?.phone_number || '', // Optional in Google profile
+          collegeId: null, // To be filled during profile setup
+          bagNumber: null, // To be filled during profile setup
+          mobileNumber: payload?.phone_number || null, // Optional in Google profile, filled during setup
           createdAt: new Date()
         }
       });
-      console.log(`New student created: ${student.email} with bag ${student.bagNumber}`);
+      console.log(`New student created: ${student.email}`);
     }
 
     // Issue application JWT for student session

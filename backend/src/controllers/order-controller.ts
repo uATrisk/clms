@@ -8,9 +8,6 @@ import { AppError } from '../middlewares/error-handler';
 import { AuthenticatedRequest } from '../middlewares/auth-middleware';
 
 const orderSubmissionSchema = z.object({
-  collegeId: z.string().optional(),
-  bagNumber: z.string().min(1, 'Bag number is required'),
-  mobileNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Valid mobile number required'),
   selfReportedCount: z.number().int().positive('Item count must be a positive integer')
 });
 
@@ -29,36 +26,33 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
       throw error;
     }
 
-    const { collegeId, bagNumber, mobileNumber, selfReportedCount } = parsed.data;
+    const { selfReportedCount } = parsed.data;
     const authReq = req as AuthenticatedRequest;
-    const userEmail = authReq.user?.email;
+    const studentId = authReq.user?.id;
 
-    if (!userEmail) {
-      const error = new Error('Unauthorized: No verified email in token') as AppError;
+    if (!studentId) {
+      const error = new Error('Unauthorized') as AppError;
       error.status = 401;
       throw error;
     }
 
-    // Resolve the student by the verified Google email
-    let student = await prisma.student.findUnique({
-      where: { email: userEmail }
+    // Fetch the student's own record from the database
+    const student = await prisma.student.findUnique({
+      where: { id: studentId }
     });
 
     if (!student) {
-      const error = new Error('Student record not found for this identity') as AppError;
+      const error = new Error('Student record not found') as AppError;
       error.status = 404;
       throw error;
     }
 
-    // Update their operational details based on the physical drop-off
-    student = await prisma.student.update({
-      where: { id: student.id },
-      data: {
-        ...(collegeId ? { collegeId } : {}),
-        bagNumber,
-        mobileNumber
-      }
-    });
+    // Check profile completeness
+    if (!student.bagNumber || !student.bagNumber.trim() || !student.mobileNumber || !student.mobileNumber.trim()) {
+      const error = new Error('Please complete your profile before submitting laundry') as AppError;
+      error.status = 400;
+      throw error;
+    }
 
     // Generate unique order code
     let orderCode = generateOrderCode();
@@ -74,12 +68,12 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
       }
     }
 
-    // Create the order
+    // Create the order using student's saved bagNumber and studentId
     const order = await prisma.order.create({
       data: {
         orderCode,
         studentId: student.id,
-        bagNumber,
+        bagNumber: student.bagNumber,
         selfReportedCount,
         status: OrderStatus.SUBMITTED
       },
@@ -106,7 +100,7 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
         status: order.status,
         submittedAt: order.submittedAt,
         student: {
-          name: order.student.name, // Using verified Google name
+          name: order.student.name,
           mobileNumber: order.student.mobileNumber,
           collegeId: order.student.collegeId
         }
@@ -179,7 +173,7 @@ export const trackOrder = async (req: Request, res: Response, next: NextFunction
     }
 
     // Mask phone number for privacy on tracking page
-    const phone = order.student.mobileNumber;
+    const phone = order.student.mobileNumber || '';
     const maskedMobile = phone.length > 4
       ? phone.slice(0, 3) + '*'.repeat(phone.length - 7 > 0 ? phone.length - 7 : 3) + phone.slice(-4)
       : phone;

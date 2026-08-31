@@ -380,6 +380,18 @@ export default function StaffOrdersPage() {
 
         {/* View Switcher Tabs */}
         <div className="hidden md:flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+          {staffUser?.role === 'ADMIN' && (
+            <Link
+              to="/admin/dashboard"
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                location.pathname === '/admin/dashboard'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              Admin Portal
+            </Link>
+          )}
           <Link
             to="/staff/orders"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${

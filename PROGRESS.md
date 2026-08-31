@@ -86,6 +86,7 @@
 - [x] **Admin Management & Controls**
   - [x] Staff account management CRUD (`POST/PATCH /api/admin/staff`, `GET /api/admin/staff`)
   - [x] Master order view with filters by status, date (`GET /api/admin/orders`)
+  - [x] Admin Login and unified UI dashboard connecting `/admin/dashboard`, `/staff/orders`, and `/staff/collection`.
 - [ ] **Analytics & Reporting**
   - [x] Analytics backend aggregation (`GET /api/admin/analytics/summary`)
   - [ ] Analytics UI: Turnaround time, peak submission hours, complaint frequency

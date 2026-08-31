@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/auth-context';
 import { StaffAuthProvider } from './contexts/staff-auth-context';
 import { ProtectedRoute } from './components/protected-route';
 import { StaffProtectedRoute } from './components/staff-protected-route';
+import { AdminProtectedRoute } from './components/admin-protected-route';
 import { Header } from './components/header';
 
 import LandingPage from './pages/landing-page';
@@ -16,12 +17,14 @@ import LoginPage from './pages/login-page';
 import StaffLoginPage from './pages/staff-login-page';
 import StaffOrdersPage from './pages/staff-orders-page';
 import StaffCollectionPage from './pages/staff-collection-page';
+import AdminLoginPage from './pages/admin-login-page';
+import AdminDashboardPage from './pages/admin-dashboard-page';
 
 const queryClient = new QueryClient();
 
 function MainContent() {
   const location = useLocation();
-  const isStaffRoute = location.pathname.startsWith('/staff');
+  const isStaffRoute = location.pathname.startsWith('/staff') || location.pathname.startsWith('/admin');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -69,6 +72,15 @@ function MainContent() {
               <StaffProtectedRoute>
                 <StaffCollectionPage />
               </StaffProtectedRoute>
+            }
+          />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminProtectedRoute>
+                <AdminDashboardPage />
+              </AdminProtectedRoute>
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -184,3 +184,46 @@ This is a temporary measure designed to unblock end-to-end testing and the front
 ### Status
 Accepted (Interim)
 
+---
+
+## [2026-08-31] ADR 010: Tolerant Batch Architecture for Bulk Order Status Updates
+
+### Context
+When implementing the bulk status transition feature (`PATCH /api/staff/orders/bulk/status`) in the Washer Dashboard to allow staff to mark multiple `PROCESSING` orders as `READY` simultaneously, we had to choose between a "strict batch" (fail the entire transaction if any single order fails validation) or a "tolerant batch" (skip invalid/ineligible items and process the rest).
+
+### Decision
+We adopted a Tolerant Batch Processing architecture.
+1. The endpoint accepts an array of `orderIds`.
+2. It evaluates all IDs upfront against database state.
+3. Orders not found or in invalid statuses (e.g., `ACCEPTED` instead of `PROCESSING`) are appended to a `failed` array with explicit reasons.
+4. All valid `PROCESSING` orders are successfully transitioned to `READY`, get OTPs generated, and receive `status_history` audit logs strictly atomically inside a single `prisma.$transaction`.
+5. The API responds with HTTP 200 containing a summary of `{ succeeded: [...], failed: [...] }`.
+
+### Rationale
+- **Concurrency Resilience:** In a high-volume live environment, two staff members might process the same queue concurrently. If Staff A transitions Bag 101, and Staff B selects Bag 101 through Bag 120, a strict batch would fail Staff B's entire action. The tolerant batch prevents a single desynced line item from blocking 19 valid ones from receiving their OTPs.
+- **Operational Continuity:** Washers receive a clean UI summary modal explicitly explaining which bag failed ("Invalid status", etc.), saving them from manually deselecting mismatched checkboxes to retry.
+
+### Status
+Accepted
+
+---
+
+## [2026-08-31] ADR 011: Manual Admin PIN Override for Order Collection
+
+### Context
+To finalize the strict OTP-verified collection loop (Phase 2), we identified critical physical operational edge cases: a student's phone dies, they lose their OTP, or SMS delivery strictly fails. The collection desk needs a secure, auditable circumvention mechanism to physically hand back garments to students without blocking the workflow.
+
+### Decision
+We implemented a shared-secret Manual Admin Override mechanism for the `PATCH /api/staff/orders/:id/collect` endpoint.
+1. We introduced an `ADMIN_PIN` environment variable as a simple, stateless shared secret.
+2. The collection payload conditionally accepts an `adminPin` field instead of an `otp`.
+3. If a valid `adminPin` is provided, OTP stringency is entirely bypassed.
+4. **Mandatory Audit Logging:** Whenever the override is utilized, the `status_history` table's `note` field explicitly records `"Collected via ADMIN PIN OVERRIDE - OTP was bypassed"`.
+
+### Rationale
+- **Simplicity vs Bureaucracy:** We intentionally avoided building a complex granular permission escalation or multi-device approval flow. A simple environment variable shared secret (`ADMIN_PIN`) is adequate for the physical reality of a campus laundry room desk override.
+- **Auditability Inviolability:** By enforcing the override note in the atomic `$transaction`, administrators can always query the database to review exactly which staff member accounts bypassed standard security, preserving trust without restricting factory floor velocity.
+
+### Status
+Accepted
+

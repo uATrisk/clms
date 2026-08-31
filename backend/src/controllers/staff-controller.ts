@@ -503,10 +503,19 @@ export const searchOrders = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-const collectOrderSchema = z.object({
-  otp: z.string().min(1, 'OTP is required'),
-  returnedCount: z.number().int().min(0, 'Returned count must be a non-negative integer'),
-});
+const collectOrderSchema = z
+  .object({
+    otp: z.string().optional(),
+    adminPin: z.string().optional(),
+    returnedCount: z.number().int().min(0, 'Returned count must be a non-negative integer'),
+  })
+  .refine(
+    (data) => (data.otp && data.otp.trim().length > 0) || (data.adminPin && data.adminPin.trim().length > 0),
+    {
+      message: 'Either OTP or Admin PIN must be provided',
+      path: ['otp'],
+    }
+  );
 
 export const collectOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -528,7 +537,7 @@ export const collectOrder = async (req: Request, res: Response, next: NextFuncti
       throw error;
     }
 
-    const { otp, returnedCount } = parsed.data;
+    const { otp, adminPin, returnedCount } = parsed.data;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -558,29 +567,53 @@ export const collectOrder = async (req: Request, res: Response, next: NextFuncti
       throw error;
     }
 
-    if (!order.collectionOtp) {
-      const error = new Error('No OTP found for this order. Please regenerate OTP.') as AppError;
-      error.status = 400;
-      throw error;
+    let isOverride = false;
+    const configuredAdminPin = process.env.ADMIN_PIN;
+
+    if (adminPin && adminPin.trim().length > 0) {
+      // Admin PIN override flow
+      if (!configuredAdminPin || adminPin.trim() !== configuredAdminPin.trim()) {
+        const error = new Error('Invalid Admin PIN') as AppError;
+        error.status = 401;
+        throw error;
+      }
+      isOverride = true;
+    } else {
+      // Standard OTP flow
+      if (!otp || otp.trim().length === 0) {
+        const error = new Error('OTP is required when Admin PIN is not provided') as AppError;
+        error.status = 400;
+        throw error;
+      }
+
+      if (!order.collectionOtp) {
+        const error = new Error('No OTP found for this order. Please regenerate OTP.') as AppError;
+        error.status = 400;
+        throw error;
+      }
+
+      if (order.otpExpiresAt && new Date() > order.otpExpiresAt) {
+        const error = new Error('OTP expired, please regenerate') as AppError;
+        error.status = 400;
+        throw error;
+      }
+
+      const isOtpValid = await bcrypt.compare(otp.trim(), order.collectionOtp);
+      if (!isOtpValid) {
+        const error = new Error('Invalid OTP') as AppError;
+        error.status = 401;
+        throw error;
+      }
     }
 
-    if (order.otpExpiresAt && new Date() > order.otpExpiresAt) {
-      const error = new Error('OTP expired, please regenerate') as AppError;
-      error.status = 400;
-      throw error;
+    const noteParts: string[] = [];
+    if (isOverride) {
+      noteParts.push('Collected via ADMIN PIN OVERRIDE - OTP was bypassed');
     }
-
-    const isOtpValid = await bcrypt.compare(otp, order.collectionOtp);
-    if (!isOtpValid) {
-      const error = new Error('Invalid OTP') as AppError;
-      error.status = 401;
-      throw error;
-    }
-
-    let note: string | undefined = undefined;
     if (order.verifiedCount !== null && order.verifiedCount !== returnedCount) {
-      note = `Returned count mismatch: verified ${order.verifiedCount} vs returned ${returnedCount}`;
+      noteParts.push(`Returned count mismatch: verified ${order.verifiedCount} vs returned ${returnedCount}`);
     }
+    const note = noteParts.length > 0 ? noteParts.join('. ') : undefined;
 
     const now = new Date();
 

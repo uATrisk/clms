@@ -15,6 +15,8 @@ import {
   X,
   Sparkles,
   ShoppingBag,
+  ShieldAlert,
+  KeyRound,
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -45,6 +47,8 @@ export default function StaffCollectionPage() {
   const [collectModalOrder, setCollectModalOrder] = useState<ReadyOrder | null>(null);
   const [otpInput, setOtpInput] = useState('');
   const [returnedCountInput, setReturnedCountInput] = useState('');
+  const [isAdminOverride, setIsAdminOverride] = useState(false);
+  const [adminPinInput, setAdminPinInput] = useState('');
   const [isSubmittingCollect, setIsSubmittingCollect] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
@@ -90,7 +94,9 @@ export default function StaffCollectionPage() {
   const handleOpenCollectModal = (order: ReadyOrder) => {
     setCollectModalOrder(order);
     setOtpInput('');
+    setAdminPinInput('');
     setReturnedCountInput('');
+    setIsAdminOverride(false);
     setModalError(null);
   };
 
@@ -98,7 +104,9 @@ export default function StaffCollectionPage() {
     if (isSubmittingCollect) return;
     setCollectModalOrder(null);
     setOtpInput('');
+    setAdminPinInput('');
     setReturnedCountInput('');
+    setIsAdminOverride(false);
     setModalError(null);
   };
 
@@ -106,16 +114,30 @@ export default function StaffCollectionPage() {
     e.preventDefault();
     if (!collectModalOrder) return;
 
-    const trimmedOtp = otpInput.trim();
-    if (!trimmedOtp) {
-      setModalError('Please enter the 4-digit collection OTP provided by the student.');
-      return;
-    }
-
     const count = parseInt(returnedCountInput, 10);
     if (isNaN(count) || count < 0) {
       setModalError('Please enter a valid non-negative number of returned garments.');
       return;
+    }
+
+    const payload: { returnedCount: number; otp?: string; adminPin?: string } = {
+      returnedCount: count,
+    };
+
+    if (isAdminOverride) {
+      const trimmedPin = adminPinInput.trim();
+      if (!trimmedPin) {
+        setModalError('Please enter the Admin PIN for manual override.');
+        return;
+      }
+      payload.adminPin = trimmedPin;
+    } else {
+      const trimmedOtp = otpInput.trim();
+      if (!trimmedOtp) {
+        setModalError('Please enter the 4-digit collection OTP provided by the student.');
+        return;
+      }
+      payload.otp = trimmedOtp;
     }
 
     setModalError(null);
@@ -124,10 +146,7 @@ export default function StaffCollectionPage() {
     try {
       const response = await axios.patch(
         `${API_BASE_URL}/staff/orders/${collectModalOrder.id}/collect`,
-        {
-          otp: trimmedOtp,
-          returnedCount: count,
-        },
+        payload,
         {
           headers: { Authorization: `Bearer ${staffToken}` },
         }
@@ -146,12 +165,14 @@ export default function StaffCollectionPage() {
       setNotificationBanner({
         type: 'success',
         title: 'Laundry Handover Completed',
-        message: `Order ${orderCode} has been successfully verified and marked as COLLECTED.`,
+        message: isAdminOverride
+          ? `Order ${orderCode} was collected via ADMIN PIN OVERRIDE and marked as COLLECTED.`
+          : `Order ${orderCode} has been successfully verified and marked as COLLECTED.`,
       });
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 401) {
-        setModalError('Invalid OTP, please try again.');
+        setModalError(isAdminOverride ? 'Invalid Admin PIN. Please try again.' : 'Invalid OTP, please try again.');
       } else {
         const errorMsg =
           err.response?.data?.error?.message ||
@@ -483,25 +504,72 @@ export default function StaffCollectionPage() {
                 </div>
               )}
 
-              {/* OTP Field */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Collection OTP <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otpInput}
-                  onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter 4-digit OTP"
-                  autoFocus
-                  required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center font-mono text-lg tracking-widest font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
-                />
-                <p className="text-[11px] text-slate-400 mt-1 text-center">
-                  Ask student for the 4-digit code shown on their tracking page.
-                </p>
+              {/* Mode Toggle Link */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  {isAdminOverride ? 'Admin Security Override' : 'Verification Method'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdminOverride(!isAdminOverride);
+                    setModalError(null);
+                  }}
+                  className="text-xs font-semibold text-amber-600 hover:text-amber-700 underline transition cursor-pointer"
+                >
+                  {isAdminOverride ? '← Use Standard OTP' : 'Use Admin Override'}
+                </button>
               </div>
+
+              {!isAdminOverride ? (
+                /* OTP Field */
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Collection OTP <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpInput}
+                    onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Enter 4-digit OTP"
+                    autoFocus
+                    required
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center font-mono text-lg tracking-widest font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1 text-center">
+                    Ask student for the 4-digit code shown on their tracking page.
+                  </p>
+                </div>
+              ) : (
+                /* Admin PIN Override Field */
+                <div className="p-3.5 bg-amber-50/80 rounded-xl border-2 border-amber-300 space-y-2.5">
+                  <div className="flex items-start gap-2 text-amber-900">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-[11px] leading-relaxed">
+                      <strong>Manual Bypass Mode:</strong> Overriding OTP requires the Admin PIN. This action will be permanently logged in the audit trail.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">
+                      Admin Security PIN <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-amber-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={adminPinInput}
+                        onChange={(e) => setAdminPinInput(e.target.value)}
+                        placeholder="Enter Admin PIN"
+                        autoFocus
+                        required
+                        className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-amber-300 rounded-xl font-mono text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Returned Count Field */}
               <div>
@@ -535,12 +603,21 @@ export default function StaffCollectionPage() {
                 <button
                   type="submit"
                   disabled={isSubmittingCollect}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs shadow-emerald-700/10"
+                  className={`px-5 py-2 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                    isAdminOverride
+                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-700/10'
+                      : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-700/10'
+                  }`}
                 >
                   {isSubmittingCollect ? (
                     <>
                       <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Verifying...</span>
+                      <span>{isAdminOverride ? 'Overriding...' : 'Verifying...'}</span>
+                    </>
+                  ) : isAdminOverride ? (
+                    <>
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <span>Authorize Handover</span>
                     </>
                   ) : (
                     <>

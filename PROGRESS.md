@@ -7,7 +7,7 @@
 ---
 
 ## Current Phase
-**Phase 1: Setup, Database Schema, Core API & Student Interface** (In Progress)
+**Phase 3: Complaints Module & Notifications Integration** (Ready to Begin)
 
 ---
 
@@ -60,10 +60,10 @@
   - [x] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date (ETA) setting
   - [x] Status update: Mark Ready with modal OTP display (`PATCH /api/staff/orders/:id/status`)
   - [x] Bulk status update feature
-- [ ] **Collection Center Dashboard**
+- [x] **Collection Center Dashboard**
   - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` & `/staff/collection` search UI)
   - [x] Collection OTP verification & count returned verification (`PATCH /api/staff/orders/:id/collect` & `/staff/collection` modal UI)
-  - [ ] Manual override with Admin PIN support
+  - [x] Manual override with Admin PIN support
 
 ---
 

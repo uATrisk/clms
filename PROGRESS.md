@@ -61,8 +61,8 @@
   - [x] Status update: Mark Ready with modal OTP display (`PATCH /api/staff/orders/:id/status`)
   - [ ] Bulk status update feature
 - [ ] **Collection Center Dashboard**
-  - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` - Backend implemented; frontend UI pending)
-  - [x] Collection OTP verification & count returned verification (`PATCH /api/staff/orders/:id/collect` - Backend implemented; frontend UI pending)
+  - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` & `/staff/collection` search UI)
+  - [x] Collection OTP verification & count returned verification (`PATCH /api/staff/orders/:id/collect` & `/staff/collection` modal UI)
   - [ ] Manual override with Admin PIN support
 
 ---

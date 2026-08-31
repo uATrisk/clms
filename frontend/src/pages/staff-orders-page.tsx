@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useStaffAuth } from '../contexts/staff-auth-context';
@@ -44,6 +45,7 @@ type QueueOrder = {
 export default function StaffOrdersPage() {
   const { staffToken, staffUser, staffLogout } = useStaffAuth();
   const queryClient = useQueryClient();
+  const location = useLocation();
 
   const [activeTab, setActiveTab] = useState<'queue' | 'active'>('queue');
 
@@ -307,7 +309,31 @@ export default function StaffOrdersPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* View Switcher Tabs */}
+        <div className="hidden md:flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+          <Link
+            to="/staff/orders"
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+              location.pathname === '/staff/orders'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            Washer Queue
+          </Link>
+          <Link
+            to="/staff/collection"
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+              location.pathname === '/staff/collection'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            Collection Desk
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-3 sm:gap-4">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-medium text-slate-200">
               {staffUser?.name || staffUser?.username}
@@ -323,10 +349,34 @@ export default function StaffOrdersPage() {
             className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-red-900/40 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-red-700 transition cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
+            <span className="hidden sm:inline">Sign Out</span>
           </button>
         </div>
       </header>
+
+      {/* Mobile Sub-Navigation Bar */}
+      <div className="md:hidden bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-center gap-2">
+        <Link
+          to="/staff/orders"
+          className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold transition ${
+            location.pathname === '/staff/orders'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-300 hover:bg-slate-700'
+          }`}
+        >
+          Washer Queue
+        </Link>
+        <Link
+          to="/staff/collection"
+          className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold transition ${
+            location.pathname === '/staff/collection'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-300 hover:bg-slate-700'
+          }`}
+        >
+          Collection Desk
+        </Link>
+      </div>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">

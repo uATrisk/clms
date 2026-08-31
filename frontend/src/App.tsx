@@ -15,6 +15,7 @@ import SubmitPage from './pages/submit-page';
 import LoginPage from './pages/login-page';
 import StaffLoginPage from './pages/staff-login-page';
 import StaffOrdersPage from './pages/staff-orders-page';
+import StaffCollectionPage from './pages/staff-collection-page';
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,14 @@ function MainContent() {
             element={
               <StaffProtectedRoute>
                 <StaffOrdersPage />
+              </StaffProtectedRoute>
+            }
+          />
+          <Route
+            path="/staff/collection"
+            element={
+              <StaffProtectedRoute>
+                <StaffCollectionPage />
               </StaffProtectedRoute>
             }
           />

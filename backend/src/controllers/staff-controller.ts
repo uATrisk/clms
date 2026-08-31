@@ -297,6 +297,161 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
   }
 };
 
+const bulkUpdateStatusSchema = z.object({
+  orderIds: z
+    .array(z.string().min(1, 'Order ID cannot be empty'))
+    .min(1, 'orderIds array must contain at least one order ID'),
+  action: z.enum(['mark_ready']),
+});
+
+export const bulkUpdateOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const staffId = authReq.user?.id;
+
+    if (!staffId) {
+      const error = new Error('Unauthorized: Staff ID not found in token') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const parsed = bulkUpdateStatusSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const error = new Error('Validation Error') as AppError;
+      error.status = 400;
+      error.errors = parsed.error.format();
+      throw error;
+    }
+
+    const { action } = parsed.data;
+    // Deduplicate input IDs
+    const orderIds = Array.from(new Set(parsed.data.orderIds));
+
+    // Fetch all requested orders
+    const orders = await prisma.order.findMany({
+      where: {
+        id: { in: orderIds },
+      },
+      include: {
+        student: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    const ordersById = new Map(orders.map((o) => [o.id, o]));
+
+    type SucceededItem = {
+      orderId: string;
+      orderCode: string;
+      bagNumber: string;
+      studentName?: string;
+      otp: string;
+    };
+
+    type FailedItem = {
+      orderId: string;
+      orderCode?: string;
+      bagNumber?: string;
+      reason: string;
+    };
+
+    const eligibleOrders: {
+      order: (typeof orders)[0];
+      plainOtp: string;
+      hashedOtp: string;
+    }[] = [];
+    const failed: FailedItem[] = [];
+
+    // Pre-validate orders and generate OTPs
+    for (const id of orderIds) {
+      const order = ordersById.get(id);
+      if (!order) {
+        failed.push({
+          orderId: id,
+          reason: 'Order not found',
+        });
+        continue;
+      }
+
+      if (order.status !== 'PROCESSING') {
+        failed.push({
+          orderId: id,
+          orderCode: order.orderCode,
+          bagNumber: order.bagNumber,
+          reason: `Invalid status '${order.status}'. Order must be in PROCESSING status to be marked ready.`,
+        });
+        continue;
+      }
+
+      const plainOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      const hashedOtp = await bcrypt.hash(plainOtp, 10);
+
+      eligibleOrders.push({
+        order,
+        plainOtp,
+        hashedOtp,
+      });
+    }
+
+    const now = new Date();
+    const otpExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const succeeded: SucceededItem[] = [];
+
+    if (eligibleOrders.length > 0) {
+      await prisma.$transaction(async (tx) => {
+        for (const item of eligibleOrders) {
+          const { order, plainOtp, hashedOtp } = item;
+
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              status: 'READY',
+              actualReadyAt: now,
+              collectionOtp: hashedOtp,
+              collectionOtpPlain: plainOtp,
+              otpExpiresAt,
+            },
+          });
+
+          await logStatusChange({
+            orderId: order.id,
+            fromStatus: 'PROCESSING',
+            toStatus: 'READY',
+            changedById: staffId,
+            tx,
+          });
+
+          succeeded.push({
+            orderId: order.id,
+            orderCode: order.orderCode,
+            bagNumber: order.bagNumber,
+            studentName: order.student?.name,
+            otp: plainOtp,
+          });
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      action,
+      summary: {
+        totalRequested: orderIds.length,
+        succeededCount: succeeded.length,
+        failedCount: failed.length,
+      },
+      succeeded,
+      failed,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const searchOrders = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const q = req.query.q as string;

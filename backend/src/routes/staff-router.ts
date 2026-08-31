@@ -4,6 +4,7 @@ import {
   getActiveOrders,
   acceptOrder,
   updateOrderStatus,
+  bulkUpdateOrderStatus,
   searchOrders,
   collectOrder,
 } from '../controllers/staff-controller';
@@ -17,6 +18,9 @@ router.get('/orders/active', authenticate, authorize(['WASHER', 'ADMIN']), getAc
 
 // Order Acceptance (Dual-count verification)
 router.patch('/orders/:id/accept', authenticate, authorize(['WASHER', 'ADMIN']), acceptOrder);
+
+// Bulk Order Status Updates (Mark Ready in batch) - placed before :id param route
+router.patch('/orders/bulk/status', authenticate, authorize(['WASHER', 'ADMIN']), bulkUpdateOrderStatus);
 
 // Order Status Updates (Set ETA / Mark Ready)
 router.patch('/orders/:id/status', authenticate, authorize(['WASHER', 'ADMIN']), updateOrderStatus);

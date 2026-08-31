@@ -71,6 +71,31 @@ export default function StaffOrdersPage() {
     message: string;
   } | null>(null);
 
+  // Bulk Ready State
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [bulkReadyModal, setBulkReadyModal] = useState<{
+    succeeded: any[];
+    failed: any[];
+    summary: any;
+  } | null>(null);
+
+  const toggleOrderSelection = (id: string, isProcessing: boolean) => {
+    if (!isProcessing) return;
+    const next = new Set(selectedOrderIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedOrderIds(next);
+  };
+
+  const toggleAllSelection = (orders: QueueOrder[]) => {
+    const processingIds = orders.filter((o) => o.status === 'PROCESSING').map((o) => o.id);
+    if (selectedOrderIds.size === processingIds.length && processingIds.length > 0) {
+      setSelectedOrderIds(new Set());
+    } else {
+      setSelectedOrderIds(new Set(processingIds));
+    }
+  };
+
   // 1. Fetch Queue (SUBMITTED orders)
   const queueQuery = useQuery({
     queryKey: ['staff-orders-queue'],
@@ -213,6 +238,50 @@ export default function StaffOrdersPage() {
       });
     },
   });
+
+  // Bulk Mark Ready Mutation
+  const bulkReadyMutation = useMutation({
+    mutationFn: async (orderIds: string[]) => {
+      const response = await axios.patch(
+        `${API_BASE_URL}/staff/orders/bulk/status`,
+        { action: 'mark_ready', orderIds },
+        { headers: { Authorization: `Bearer ${staffToken}` } }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['staff-orders-active'] });
+      setSelectedOrderIds(new Set());
+      setBulkReadyModal({
+        succeeded: data.succeeded || [],
+        failed: data.failed || [],
+        summary: data.summary || {},
+      });
+      setNotificationBanner({
+        type: 'success',
+        title: 'Bulk Processing Completed',
+        message: `Successfully marked ${data?.summary?.succeededCount || 0} order(s) as ready.${
+          data?.summary?.failedCount ? ` ${data.summary.failedCount} order(s) failed.` : ''
+        }`,
+      });
+    },
+    onError: (err: any) => {
+      setNotificationBanner({
+        type: 'error',
+        title: 'Bulk Processing Failed',
+        message:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          'Could not complete bulk update.',
+      });
+    },
+  });
+
+  const handleBulkMarkReady = () => {
+    const ids = Array.from(selectedOrderIds);
+    if (ids.length === 0) return;
+    bulkReadyMutation.mutate(ids);
+  };
 
   const submittedOrders = queueQuery.data || [];
   const activeOrders = activeQuery.data || [];
@@ -574,11 +643,44 @@ export default function StaffOrdersPage() {
         {/* Tab 2: Active Orders (ACCEPTED / PROCESSING) */}
         {activeTab === 'active' && (
           <div>
-            <div className="mb-4">
-              <h2 className="text-lg font-bold text-slate-900">Active Wash &amp; Processing Orders</h2>
-              <p className="text-xs text-slate-500">
-                Orders physically accepted and currently in the washing, drying, or pressing cycle. Set ETAs or mark ready once finished.
-              </p>
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Active Wash &amp; Processing Orders</h2>
+                <p className="text-xs text-slate-500">
+                  Orders physically accepted and currently in the washing, drying, or pressing cycle. Set ETAs or mark ready once finished.
+                </p>
+              </div>
+
+              {selectedOrderIds.size > 0 && (
+                <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl animate-in fade-in">
+                  <span className="text-xs font-semibold text-blue-900">
+                    {selectedOrderIds.size} order{selectedOrderIds.size > 1 ? 's' : ''} selected
+                  </span>
+                  <button
+                    onClick={handleBulkMarkReady}
+                    disabled={bulkReadyMutation.isPending}
+                    className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
+                  >
+                    {bulkReadyMutation.isPending ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Mark Selected as Ready ({selectedOrderIds.size})</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setSelectedOrderIds(new Set())}
+                    className="text-xs text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
             </div>
 
             {activeQuery.isError && (
@@ -613,6 +715,20 @@ export default function StaffOrdersPage() {
                   <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200 tracking-wider">
                       <tr>
+                        <th scope="col" className="px-4 py-3.5 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={
+                              activeOrders.filter((o) => o.status === 'PROCESSING').length > 0 &&
+                              selectedOrderIds.size ===
+                                activeOrders.filter((o) => o.status === 'PROCESSING').length
+                            }
+                            onChange={() => toggleAllSelection(activeOrders)}
+                            disabled={!activeOrders.some((o) => o.status === 'PROCESSING')}
+                            aria-label="Select all processing orders"
+                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-40"
+                          />
+                        </th>
                         <th scope="col" className="px-5 py-3.5">Order / Bag</th>
                         <th scope="col" className="px-5 py-3.5">Student</th>
                         <th scope="col" className="px-5 py-3.5 text-center">Verified Count</th>
@@ -624,11 +740,25 @@ export default function StaffOrdersPage() {
                     <tbody className="divide-y divide-slate-200">
                       {activeOrders.map((order) => {
                         const isMismatch = order.countMismatchFlag;
+                        const isProcessing = order.status === 'PROCESSING';
+                        const isSelected = selectedOrderIds.has(order.id);
                         return (
                           <tr
                             key={order.id}
-                            className="hover:bg-slate-50/80 transition-colors"
+                            className={`transition-colors ${
+                              isSelected ? 'bg-blue-50/60 hover:bg-blue-50/90' : 'hover:bg-slate-50/80'
+                            }`}
                           >
+                            <td className="px-4 py-4 text-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleOrderSelection(order.id, isProcessing)}
+                                disabled={!isProcessing}
+                                aria-label={`Select order ${order.orderCode}`}
+                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-30"
+                              />
+                            </td>
                             <td className="px-5 py-4">
                               <div className="font-mono font-bold text-blue-600 text-sm">
                                 {order.orderCode}
@@ -982,6 +1112,99 @@ export default function StaffOrdersPage() {
                   Done / Dismiss
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: Bulk Mark Ready Summary Results */}
+      {bulkReadyModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
+            <div className="bg-slate-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center font-bold text-emerald-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">Bulk Ready Update Summary</h3>
+                  <p className="text-xs text-slate-400">
+                    {bulkReadyModal.summary?.succeededCount || 0} succeeded,{' '}
+                    {bulkReadyModal.summary?.failedCount || 0} failed
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBulkReadyModal(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5">
+              {bulkReadyModal.succeeded.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2.5 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Ready for Pickup ({bulkReadyModal.succeeded.length})</span>
+                  </h4>
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {bulkReadyModal.succeeded.map((item: any) => (
+                      <div
+                        key={item.orderId}
+                        className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <div className="font-mono font-bold text-slate-900">
+                            {item.orderCode} <span className="font-sans font-semibold text-slate-600">(Bag #{item.bagNumber})</span>
+                          </div>
+                          {item.studentName && (
+                            <div className="text-[11px] text-slate-500 mt-0.5">{item.studentName}</div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-bold text-emerald-700 block mb-0.5">OTP</span>
+                          <span className="font-mono text-base font-black text-emerald-700 bg-white border border-emerald-300 px-2 py-0.5 rounded-md inline-block">
+                            {item.otp}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {bulkReadyModal.failed.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-red-700 mb-2.5 flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                    <span>Failed / Ineligible ({bulkReadyModal.failed.length})</span>
+                  </h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    {bulkReadyModal.failed.map((item: any) => (
+                      <div
+                        key={item.orderId}
+                        className="bg-red-50/60 border border-red-200 rounded-xl p-3 text-xs"
+                      >
+                        <div className="font-mono font-bold text-slate-900">
+                          {item.orderCode ? `${item.orderCode} (Bag #${item.bagNumber})` : item.orderId}
+                        </div>
+                        <p className="text-red-700 text-[11px] mt-0.5">{item.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 shrink-0">
+              <button
+                onClick={() => setBulkReadyModal(null)}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
+              >
+                Close Summary
+              </button>
             </div>
           </div>
         </div>

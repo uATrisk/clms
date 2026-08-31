@@ -59,7 +59,7 @@
   - [x] Count mismatch auto-flagging & visual alert logic
   - [x] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date (ETA) setting
   - [x] Status update: Mark Ready with modal OTP display (`PATCH /api/staff/orders/:id/status`)
-  - [ ] Bulk status update feature
+  - [x] Bulk status update feature
 - [ ] **Collection Center Dashboard**
   - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` & `/staff/collection` search UI)
   - [x] Collection OTP verification & count returned verification (`PATCH /api/staff/orders/:id/collect` & `/staff/collection` modal UI)

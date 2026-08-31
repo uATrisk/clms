@@ -70,7 +70,7 @@
 ### Phase 3: Complaints Module & Notifications Integration
 - [ ] **Complaints System**
   - [x] Public complaint submission endpoint (`POST /api/orders/:orderCode/complaint`)
-  - [ ] Student-facing "Raise Complaint" form with category selection
+  - [x] Student-facing "Raise Complaint" form with category selection
   - [ ] Cloudinary/S3 integration for photo proof upload (Deferred — `photoUrl` left null in v1)
   - [x] Admin complaint queue API (`GET /api/admin/complaints`)
   - [x] Admin complaint resolution endpoint (`PATCH /api/admin/complaints/:id`)

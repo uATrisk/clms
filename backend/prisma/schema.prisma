@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ----------------------------------------------------------------------
+// ENUMS
+// ----------------------------------------------------------------------
+
+enum OrderStatus {
+  SUBMITTED
+  ACCEPTED
+  PROCESSING
+  DELAYED
+  READY
+  COLLECTED
+  COMPLAINT_RAISED
+  UNDER_REVIEW
+  RESOLVED
+  CANCELLED
+}
+
+enum StaffRole {
+  WASHER
+  COLLECTION
+  ADMIN
+}
+
+enum ComplaintCategory {
+  MISSING
+  DAMAGED
+  WRONG_COUNT
+  WRONG_BAG
+  NOT_READY
+  OTHER
+}
+
+enum ComplaintStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  ESCALATED
+}
+
+enum NotificationChannel {
+  SMS
+  WHATSAPP
+  EMAIL
+}
+
+// ----------------------------------------------------------------------
+// MODELS
+// ----------------------------------------------------------------------
+
+model Student {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  email         String   @unique
+  collegeId     String?  @map("college_id")
+  bagNumber     String   @map("bag_number")
+  mobileNumber  String   @map("mobile_number")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  orders        Order[]
+
+  @@index([collegeId])
+  @@index([bagNumber])
+  @@index([email])
+  @@index([mobileNumber])
+  @@map("students")
+}
+
+model Order {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderCode         String       @unique @map("order_code") // e.g., LN-8842
+  studentId         String       @map("student_id") @db.Uuid
+  bagNumber         String       @map("bag_number")
+  selfReportedCount Int          @map("self_reported_count")
+  verifiedCount     Int?         @map("verified_count")
+  returnedCount     Int?         @map("returned_count")
+  status            OrderStatus  @default(SUBMITTED)
+
+  submittedAt       DateTime     @default(now()) @map("submitted_at")
+  acceptedAt        DateTime?    @map("accepted_at")
+  expectedReadyAt   DateTime?    @map("expected_ready_at") @db.Date // just date precision if only day matters, else Timestamp
+  actualReadyAt     DateTime?    @map("actual_ready_at")
+  collectedAt       DateTime?    @map("collected_at")
+  collectionOtp     String?      @map("collection_otp")
+  countMismatchFlag Boolean      @default(false) @map("count_mismatch_flag")
+
+  assignedWasherId  String?      @map("assigned_washer_id") @db.Uuid
+
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student           @relation(fields: [studentId], references: [id])
+  assignedWasher    Staff?            @relation("AssignedWasher", fields: [assignedWasherId], references: [id])
+  complaints        Complaint[]
+  statusHistory     StatusHistory[]
+  notifications     NotificationLog[]
+
+  @@index([bagNumber])
+  @@map("orders")
+}
+
+model Staff {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  role             StaffRole
+  username         String       @unique
+  passwordHash     String       @map("password_hash")
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  // Relations
+  assignedOrders   Order[]      @relation("AssignedWasher")
+  statusChanges    StatusHistory[] @relation("StatusChanger")
+  handledComplaints Complaint[] @relation("ComplaintResolver")
+
+  @@map("staff")
+}
+
+model Complaint {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String            @map("order_id") @db.Uuid
+  category         ComplaintCategory
+  description      String            @db.Text
+  photoUrl         String?           @map("photo_url")
+  status           ComplaintStatus   @default(OPEN)
+  resolutionNote   String?           @map("resolution_note") @db.Text
+
+  raisedAt         DateTime          @default(now()) @map("raised_at")
+  resolvedAt       DateTime?         @map("resolved_at")
+  handledById      String?           @map("handled_by") @db.Uuid
+
+  // Relations
+  order            Order             @relation(fields: [orderId], references: [id])
+  handledBy        Staff?            @relation("ComplaintResolver", fields: [handledById], references: [id])
+
+  @@map("complaints")
+}
+
+model StatusHistory {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String       @map("order_id") @db.Uuid
+  fromStatus       OrderStatus? @map("from_status") // Nullable if creating order, but keeping standard
+  toStatus         OrderStatus  @map("to_status")
+  changedById      String?      @map("changed_by") @db.Uuid
+  changedAt        DateTime     @default(now()) @map("changed_at")
+  note             String?      @db.Text
+
+  // Relations
+  order            Order        @relation(fields: [orderId], references: [id])
+  changedBy        Staff?       @relation("StatusChanger", fields: [changedById], references: [id])
+
+  @@map("status_history")
+}
+
+model NotificationLog {
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String              @map("order_id") @db.Uuid
+  channel          NotificationChannel
+  message          String              @db.Text
+  sentAt           DateTime            @default(now()) @map("sent_at")
+  deliveryStatus   String              @map("delivery_status")
+
+  // Relations
+  order            Order               @relation(fields: [orderId], references: [id])
+
+  @@map("notifications_log")
+}

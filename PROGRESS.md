@@ -1,34 +1,53 @@
 # Project Progress Tracker
 
+## Known Issues — Must Fix Next Session
+1. **CRITICAL:** `POST /api/orders` currently auto-generates a fake `@rishihood.edu.in` email for students who submit without a real Google-verified identity, to satisfy the new required unique email constraint. This defeats tonight's Google Auth decision — anonymous/spoofed submissions are still possible. Must decide: does `/api/orders` require a valid student JWT (from Google auth) before accepting a submission, or not? This is blocking correct frontend integration.
+2. [RESOLVED] Fixed messy email migration by generating a clean migration file (`20260831100000_add_student_email`) matching schema definitions and marking it resolved via `prisma migrate resolve --applied`.
+
+---
+
 ## Current Phase
-**Phase 1: Setup, Database Schema, Core API & Student Interface** (Not Started)
+**Phase 1: Setup, Database Schema, Core API & Student Interface** (In Progress)
 
 ---
 
 ## Phase Checklist
 
 ### Phase 1: Database Schema, Core API & Student Interface
-- [ ] **Database Setup & Prisma Schema**
-  - [ ] Configure PostgreSQL connection
-  - [ ] Implement `students` model
-  - [ ] Implement `orders` model
-  - [ ] Implement `staff` model
-  - [ ] Implement `complaints` model
-  - [ ] Implement `status_history` model
-  - [ ] Implement `notifications_log` model
-  - [ ] Run initial migrations & generate Prisma client
-- [ ] **Backend Core & Auth API**
-  - [ ] Set up Express + TypeScript boilerplate with error handling & logging
-  - [ ] Implement Staff/Admin JWT Authentication (`POST /api/auth/login`)
-  - [ ] Implement Public Order Submission (`POST /api/orders`)
-  - [ ] Implement Public Order Tracking API (`GET /api/orders/track/:orderCode`)
-  - [ ] Implement `status_history` auto-logging middleware/utility
+- [x] **Database Setup & Prisma Schema**
+  - [x] Configure PostgreSQL connection
+  - [x] Implement `students` model
+  - [x] Implement `orders` model
+  - [x] Implement `staff` model
+  - [x] Implement `complaints` model
+  - [x] Implement `status_history` model
+  - [x] Implement `notifications_log` model
+  - [x] Run initial migrations & generate Prisma client
+- [x] **Backend Core & Auth API**
+  - [x] Set up Express + TypeScript boilerplate with error handling & logging
+  - [x] Implement Staff/Admin JWT Authentication (`POST /api/auth/login`)
+  - [x] Implement Public Order Submission (`POST /api/orders`)
+  - [x] Implement Public Order Tracking API (`GET /api/orders/track/:orderCode`)
+  - [x] Implement `status_history` auto-logging middleware/utility
 - [ ] **Frontend: Student UI (Public)**
-  - [ ] Set up React + Vite + Tailwind + shadcn/ui framework
-  - [ ] Build Landing Page (Track / Submit navigation)
-  - [ ] Build Registration-Free Laundry Submission Form
-  - [ ] Build Real-Time Order Tracking Page (`/track/:orderCode`)
-  - [ ] Integrate React Query for polling status updates
+  - [x] Set up React + Vite + Tailwind + shadcn/ui framework
+  - [x] Build Landing Page (Track / Submit navigation)
+  - [x] Build Registration-Free Laundry Submission Form
+  - [x] Build Real-Time Order Tracking Page (`/track/:orderCode`)
+  - [x] Integrate React Query for polling status updates
+
+---
+
+### Phase 1.5: Student Auth Migration (Google OAuth)
+- [x] **Backend Identity Restructure**
+  - [x] Add required `@unique` `email` field to `Student` Prisma schema
+  - [x] Integrate `google-auth-library` functionality
+  - [x] Expose `POST /api/auth/google` for ID token verification & domain checks
+  - [x] Backfill/Migrate existing test student definitions safely
+- [ ] **Frontend Identity Provider**
+  - [ ] Implement `GoogleOAuthProvider` and frontend sign-in modal
+  - [ ] Intercept `/submit` and `/track` flows with Google Auth guard
+  - [ ] Modify API dispatch layer to attach student JWT to requests
 
 ---
 
@@ -91,4 +110,24 @@
 ---
 
 ## Last Session Summary
-*(No tasks executed yet — repository initialized and memory system configured.)*
+- **Supabase Cloud Database Setup:** Configured connection pooling (`DATABASE_URL`) on port 6543 and direct session connection (`DIRECT_URL`) on port 5432. Executed initial migration `20260830171425_init` and re-seeded test accounts.
+- **Backend Core & Auth API:**
+  - Implemented Staff/Admin JWT Authentication (`POST /api/auth/login`) with bcrypt verification and role-based token issuance.
+  - Implemented Public Order Submission (`POST /api/orders`) with registration-free student matching/upsert, unique `LN-XXXX-XXXX` tracking code generation, and initial `SUBMITTED` status assignment.
+  - Implemented Public Order Tracking (`GET /api/orders/track/:orderCode`) with phone number masking and status history audit timeline.
+  - Created automatic audit trail helper `logStatusChange` writing every lifecycle transition to `status_history`.
+  - Added role-based access control and JWT authentication middleware (`authenticate`, `authorize`).
+- **Frontend Core Implementation (Part 1):**
+  - Created rigorous Zod + React Hook Form based `/submit` page with Axios submission logic.
+  - Developed highly resilient TanStack Query `/track/:orderCode` page complete with mobile-first CSS dynamic lifecycles (`clsx` & `tailwind-merge`).
+- **Student Auth Architectural Shift:**
+  - Decided to pivot student tracking from "mobile + bag link" proxy identity to cryptographically secured **Google OAuth** scoped to `@rishihood.edu.in`.
+  - Implemented the `POST /api/auth/google` controller using `google-auth-library`.
+  - Added unique `email` column to `Student` Prisma model and propagated constraint using manual postgres injection.
+
+### How to Run Locally:
+1. **Backend:** Ensure `.env` in `/backend` contains the Supabase connection strings and `JWT_SECRET`. Run `npm run prisma:generate && npm run seed` then start with `npm run dev`.
+2. **Frontend:** CD into `/frontend`, run `npm install`, then start with `npm run dev`.
+3. Test Backend endpoints:
+   - Health check: `curl http://localhost:4000/api/health`
+   - Test login: `curl -X POST http://localhost:4000/api/auth/login -H "Content-Type: application/json" -d '{"username":"washer_john","password":"Password123!"}'`

@@ -33,6 +33,35 @@ export const getOrdersQueue = async (req: Request, res: Response, next: NextFunc
   }
 };
 
+export const getActiveOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: {
+          in: ['ACCEPTED', 'PROCESSING', 'DELAYED'],
+        },
+      },
+      include: {
+        student: {
+          select: {
+            name: true,
+            email: true,
+            mobileNumber: true,
+            collegeId: true,
+          },
+        },
+      },
+      orderBy: {
+        acceptedAt: 'asc',
+      },
+    });
+
+    res.status(200).json({ orders });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const acceptOrderSchema = z.object({
   verifiedCount: z.number().int().positive('Verified item count must be a positive integer'),
 });

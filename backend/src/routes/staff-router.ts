@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getOrdersQueue,
+  getActiveOrders,
   acceptOrder,
   updateOrderStatus,
   searchOrders,
@@ -12,6 +13,7 @@ const router = Router();
 
 // Order Queue (Washer Dashboard)
 router.get('/orders/queue', authenticate, authorize(['WASHER', 'ADMIN']), getOrdersQueue);
+router.get('/orders/active', authenticate, authorize(['WASHER', 'ADMIN']), getActiveOrders);
 
 // Order Acceptance (Dual-count verification)
 router.patch('/orders/:id/accept', authenticate, authorize(['WASHER', 'ADMIN']), acceptOrder);

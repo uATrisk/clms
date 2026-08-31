@@ -52,13 +52,13 @@
 ---
 
 ### Phase 2: Washer & Collection Dashboards, Status Lifecycle & OTP Flow
-- [ ] **Washer Dashboard**
-  - [ ] Staff Login View
-  - [x] Live incoming requests queue (`GET /api/staff/orders/queue`)
-  - [x] Order Acceptance & dual-count verification UI (`PATCH /api/staff/orders/:id/accept` - Backend implemented; frontend UI pending)
-  - [x] Count mismatch auto-flagging logic
-  - [x] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date setting (Backend implemented; frontend UI pending)
-  - [x] Status update: Mark Ready (triggers OTP generation & plaintext OTP exposure for student tracking) (Backend implemented; frontend UI pending)
+- [x] **Washer Dashboard**
+  - [x] Staff Login View (`/staff/login`)
+  - [x] Live incoming requests queue (`GET /api/staff/orders/queue`) & Active wash orders (`GET /api/staff/orders/active`)
+  - [x] Order Acceptance & dual-count verification UI (`PATCH /api/staff/orders/:id/accept`)
+  - [x] Count mismatch auto-flagging & visual alert logic
+  - [x] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date (ETA) setting
+  - [x] Status update: Mark Ready with modal OTP display (`PATCH /api/staff/orders/:id/status`)
   - [ ] Bulk status update feature
 - [ ] **Collection Center Dashboard**
   - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` - Backend implemented; frontend UI pending)

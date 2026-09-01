@@ -667,27 +667,27 @@ export default function AdminDashboardPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-cream-50 flex flex-col font-sans">
       {/* Top Admin Header */}
-      <header className="bg-slate-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
+      <header className="bg-maroon-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+          <div className="w-8 h-8 rounded-lg bg-maroon-800 text-maroon-200 flex items-center justify-center font-bold">
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-bold tracking-tight">CLMS Admin Operations</h1>
-            <p className="text-[11px] text-slate-400">System Controls &amp; Analytics</p>
+            <h1 className="font-serif text-sm sm:text-base font-bold tracking-tight">CLMS Admin Operations</h1>
+            <p className="text-[11px] text-cream-200">System Controls &amp; Analytics</p>
           </div>
         </div>
 
         {/* Navigation Switcher Tabs */}
-        <div className="hidden md:flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+        <div className="hidden md:flex items-center gap-1.5 bg-maroon-800/80 p-1 rounded-xl border border-maroon-700/60">
           <Link
             to="/admin/dashboard"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               location.pathname === '/admin/dashboard'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-maroon-700 text-white shadow-xs'
+                : 'text-cream-200 hover:text-white hover:bg-maroon-700/50'
             }`}
           >
             Admin Portal
@@ -696,8 +696,8 @@ export default function AdminDashboardPage() {
             to="/staff/orders"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               location.pathname === '/staff/orders'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-maroon-700 text-white shadow-xs'
+                : 'text-cream-200 hover:text-white hover:bg-maroon-700/50'
             }`}
           >
             Washer Queue
@@ -706,8 +706,8 @@ export default function AdminDashboardPage() {
             to="/staff/collection"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               location.pathname === '/staff/collection'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-maroon-700 text-white shadow-xs'
+                : 'text-cream-200 hover:text-white hover:bg-maroon-700/50'
             }`}
           >
             Collection Desk
@@ -716,17 +716,17 @@ export default function AdminDashboardPage() {
 
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-medium text-slate-200">
+            <p className="text-xs font-medium text-cream-100">
               {staffUser?.name || staffUser?.username}
             </p>
-            <span className="text-[10px] font-semibold tracking-wider uppercase text-blue-400 bg-blue-950/70 border border-blue-800/60 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-maroon-200 bg-maroon-950/70 border border-maroon-800/60 px-1.5 py-0.5 rounded">
               ADMIN
             </span>
           </div>
 
           <button
             onClick={staffLogout}
-            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
+            className="p-2 text-cream-200 hover:text-rose-400 hover:bg-maroon-800 rounded-lg transition"
             title="Log Out"
           >
             <LogOut className="w-4 h-4" />
@@ -755,7 +755,7 @@ export default function AdminDashboardPage() {
             </div>
             <button
               onClick={() => setNotification(null)}
-              className="text-slate-400 hover:text-slate-600 p-1"
+              className="text-gray-400 hover:text-gray-600 p-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -763,14 +763,14 @@ export default function AdminDashboardPage() {
         )}
 
         {/* Tab Controls Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cream-200 pb-4">
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setActiveTab('staff')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'staff'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-maroon-700 text-white shadow-xs'
+                  : 'bg-white text-gray-700 hover:bg-cream-100 border border-cream-200'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -778,10 +778,10 @@ export default function AdminDashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('orders')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'orders'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-maroon-700 text-white shadow-xs'
+                  : 'bg-white text-gray-700 hover:bg-cream-100 border border-cream-200'
               }`}
             >
               <Package className="w-4 h-4" />
@@ -789,10 +789,10 @@ export default function AdminDashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('complaints')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'complaints'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-maroon-700 text-white shadow-xs'
+                  : 'bg-white text-gray-700 hover:bg-cream-100 border border-cream-200'
               }`}
             >
               <MessageSquare className="w-4 h-4" />
@@ -800,10 +800,10 @@ export default function AdminDashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'analytics'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-maroon-700 text-white shadow-xs'
+                  : 'bg-white text-gray-700 hover:bg-cream-100 border border-cream-200'
               }`}
             >
               <BarChart3 className="w-4 h-4" />
@@ -811,10 +811,10 @@ export default function AdminDashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('announcements')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'announcements'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-maroon-700 text-white shadow-xs'
+                  : 'bg-white text-gray-700 hover:bg-cream-100 border border-cream-200'
               }`}
             >
               <Megaphone className="w-4 h-4" />
@@ -826,7 +826,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-staff'] })}
-                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
                 title="Refresh staff list"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -836,7 +836,7 @@ export default function AdminDashboardPage() {
                   setCreateStaffError(null);
                   setIsCreateStaffOpen(true);
                 }}
-                className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs transition"
+                className="flex items-center gap-2 px-3.5 py-2 bg-maroon-700 hover:bg-maroon-800 text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 Register Staff
@@ -848,7 +848,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] })}
-                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
                 title="Refresh master orders"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -860,7 +860,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-complaints'] })}
-                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
                 title="Refresh complaints list"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -872,7 +872,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-analytics-summary'] })}
-                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
                 title="Refresh analytics"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -884,7 +884,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-announcements'] })}
-                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
                 title="Refresh announcements list"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -894,7 +894,7 @@ export default function AdminDashboardPage() {
                   setCreateAnnouncementError(null);
                   setIsCreateAnnouncementOpen(true);
                 }}
-                className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs transition"
+                className="flex items-center gap-2 px-3.5 py-2 bg-maroon-700 hover:bg-maroon-800 text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Post Announcement</span>
@@ -906,27 +906,27 @@ export default function AdminDashboardPage() {
         {/* TAB 1: STAFF MANAGEMENT */}
         {activeTab === 'staff' && (
           <div className="space-y-4">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-              <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="bg-white border border-cream-200 rounded-2xl shadow-xs overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-cream-100 bg-cream-50/50 flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-slate-800">Staff &amp; Operator Accounts</h2>
-                  <p className="text-xs text-slate-500">
+                  <h2 className="font-serif text-base sm:text-lg font-bold text-gray-900">Staff &amp; Operator Accounts</h2>
+                  <p className="text-xs text-gray-500">
                     Manage active logins for washers, collection agents, and system administrators.
                   </p>
                 </div>
-                <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                <div className="text-xs font-semibold text-gray-600 bg-cream-100 px-2.5 py-1 rounded-full border border-cream-200">
                   {staffQuery.data?.length || 0} Total Accounts
                 </div>
               </div>
 
               {staffQuery.isLoading ? (
-                <div className="p-12 text-center text-slate-400">Loading staff directory...</div>
+                <div className="p-12 text-center text-gray-400">Loading staff directory...</div>
               ) : staffQuery.data?.length === 0 ? (
-                <div className="p-12 text-center text-slate-400">No staff members found.</div>
+                <div className="p-12 text-center text-gray-400">No staff members found.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-cream-50 text-gray-700 text-xs uppercase font-semibold border-b border-cream-200">
                       <tr>
                         <th className="py-3.5 px-4">Name</th>
                         <th className="py-3.5 px-4">Username</th>
@@ -936,11 +936,11 @@ export default function AdminDashboardPage() {
                         <th className="py-3.5 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-cream-100">
                       {staffQuery.data?.map((staff) => (
-                        <tr key={staff.id} className="hover:bg-slate-50/80 transition">
-                          <td className="py-3.5 px-4 font-semibold text-slate-900">{staff.name}</td>
-                          <td className="py-3.5 px-4 font-mono text-xs text-slate-600">
+                        <tr key={staff.id} className="hover:bg-cream-50/80 transition">
+                          <td className="py-3.5 px-4 font-semibold text-gray-900">{staff.name}</td>
+                          <td className="py-3.5 px-4 font-mono text-xs text-gray-600">
                             @{staff.username}
                           </td>
                           <td className="py-3.5 px-4">
@@ -952,7 +952,7 @@ export default function AdminDashboardPage() {
                               {staff.role}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-xs text-slate-500">
+                          <td className="py-3.5 px-4 text-xs text-gray-500">
                             {formatDate(staff.createdAt)}
                           </td>
                           <td className="py-3.5 px-4">
@@ -975,7 +975,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => handleStatusToggle(staff)}
                               disabled={toggleStaffStatusMutation.isPending}
-                              className={`px-3 py-1 text-xs font-semibold rounded-lg border transition ${
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg border transition cursor-pointer ${
                                 staff.active
                                   ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
                                   : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
@@ -998,10 +998,10 @@ export default function AdminDashboardPage() {
         {activeTab === 'orders' && (
           <div className="space-y-4">
             {/* Filter Toolbar */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-cream-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                <Filter className="w-4 h-4 text-slate-400" />
-                <label htmlFor="status-filter" className="text-xs font-semibold text-slate-600">
+                <Filter className="w-4 h-4 text-gray-400" />
+                <label htmlFor="status-filter" className="text-xs font-semibold text-gray-600">
                   Filter by Status:
                 </label>
                 <select
@@ -1011,7 +1011,7 @@ export default function AdminDashboardPage() {
                     setOrderStatusFilter(e.target.value);
                     setOrderPage(1);
                   }}
-                  className="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600"
+                  className="bg-cream-50 border border-cream-300 text-gray-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-maroon-700"
                 >
                   <option value="">All Statuses</option>
                   <option value="SUBMITTED">SUBMITTED</option>
@@ -1028,9 +1028,9 @@ export default function AdminDashboardPage() {
               </div>
 
               {ordersQuery.data?.pagination && (
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-gray-500">
                   Showing {ordersQuery.data.orders.length} of{' '}
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-semibold text-gray-800">
                     {ordersQuery.data.pagination.totalCount}
                   </span>{' '}
                   orders
@@ -1039,17 +1039,17 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Orders Table */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-cream-200 rounded-2xl shadow-xs overflow-hidden">
               {ordersQuery.isLoading ? (
-                <div className="p-12 text-center text-slate-400">Loading master orders...</div>
+                <div className="p-12 text-center text-gray-400">Loading master orders...</div>
               ) : ordersQuery.data?.orders?.length === 0 ? (
-                <div className="p-12 text-center text-slate-400">
+                <div className="p-12 text-center text-gray-400">
                   No orders match the selected criteria.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-cream-50 text-gray-700 text-xs uppercase font-semibold border-b border-cream-200">
                       <tr>
                         <th className="py-3.5 px-4">Order Code</th>
                         <th className="py-3.5 px-4">Bag #</th>
@@ -1060,24 +1060,24 @@ export default function AdminDashboardPage() {
                         <th className="py-3.5 px-4">Assigned Washer</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-cream-100">
                       {ordersQuery.data?.orders.map((order) => (
-                        <tr key={order.id} className="hover:bg-slate-50/80 transition">
-                          <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                        <tr key={order.id} className="hover:bg-cream-50 transition">
+                          <td className="py-3.5 px-4 font-mono font-bold text-gray-900">
                             {order.orderCode}
                           </td>
                           <td className="py-3.5 px-4">
-                            <span className="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-xs">
+                            <span className="font-semibold text-gray-800 bg-cream-100 px-2 py-0.5 rounded border border-cream-200 text-xs">
                               {order.student.bagNumber}
                             </span>
                           </td>
                           <td className="py-3.5 px-4">
-                            <div className="text-slate-900 font-medium">{order.student.name}</div>
-                            <div className="text-[11px] text-slate-400">{order.student.email}</div>
+                            <div className="text-gray-900 font-medium">{order.student.name}</div>
+                            <div className="text-[11px] text-gray-400">{order.student.email}</div>
                           </td>
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-slate-800">
+                              <span className="font-semibold text-gray-800">
                                 {order.verifiedCount ?? order.selfReportedCount}
                               </span>
                               {order.verifiedCount &&
@@ -1097,10 +1097,10 @@ export default function AdminDashboardPage() {
                               {order.status}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-xs text-slate-500">
+                          <td className="py-3.5 px-4 text-xs text-gray-500">
                             {formatDateTime(order.submittedAt)}
                           </td>
-                          <td className="py-3.5 px-4 text-xs text-slate-600">
+                          <td className="py-3.5 px-4 text-xs text-gray-600">
                             {order.assignedWasher?.name || '—'}
                           </td>
                         </tr>
@@ -1112,8 +1112,8 @@ export default function AdminDashboardPage() {
 
               {/* Pagination Controls */}
               {ordersQuery.data?.pagination && ordersQuery.data.pagination.totalPages > 1 && (
-                <div className="p-4 border-t border-slate-200 bg-slate-50/60 flex items-center justify-between">
-                  <div className="text-xs text-slate-500">
+                <div className="p-4 border-t border-cream-200 bg-cream-50/50 flex items-center justify-between">
+                  <div className="text-xs text-gray-500">
                     Page {ordersQuery.data.pagination.page} of{' '}
                     {ordersQuery.data.pagination.totalPages}
                   </div>
@@ -1121,7 +1121,7 @@ export default function AdminDashboardPage() {
                     <button
                       onClick={() => setOrderPage((p) => Math.max(1, p - 1))}
                       disabled={orderPage <= 1 || ordersQuery.isFetching}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-cream-200 text-gray-700 hover:bg-cream-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
                     >
                       <ChevronLeft className="w-4 h-4" />
                       Prev
@@ -1136,7 +1136,7 @@ export default function AdminDashboardPage() {
                         orderPage >= (ordersQuery.data?.pagination.totalPages || 1) ||
                         ordersQuery.isFetching
                       }
-                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-cream-200 text-gray-700 hover:bg-cream-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
                     >
                       Next
                       <ChevronRight className="w-4 h-4" />
@@ -1152,10 +1152,10 @@ export default function AdminDashboardPage() {
         {activeTab === 'complaints' && (
           <div className="space-y-4">
             {/* Filter Toolbar */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-cream-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                <Filter className="w-4 h-4 text-slate-400" />
-                <label htmlFor="complaint-status-filter" className="text-xs font-semibold text-slate-600">
+                <Filter className="w-4 h-4 text-gray-400" />
+                <label htmlFor="complaint-status-filter" className="text-xs font-semibold text-gray-600">
                   Filter by Status:
                 </label>
                 <select
@@ -1165,7 +1165,7 @@ export default function AdminDashboardPage() {
                     setComplaintStatusFilter(e.target.value);
                     setComplaintPage(1);
                   }}
-                  className="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600"
+                  className="bg-cream-50 border border-cream-200 text-gray-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-maroon-700"
                 >
                   <option value="">All Statuses</option>
                   <option value="OPEN">OPEN</option>
@@ -1176,9 +1176,9 @@ export default function AdminDashboardPage() {
               </div>
 
               {complaintsQuery.data?.pagination && (
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-gray-500">
                   Showing {complaintsQuery.data.complaints.length} of{' '}
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-semibold text-gray-800">
                     {complaintsQuery.data.pagination.totalCount}
                   </span>{' '}
                   complaints
@@ -1187,18 +1187,18 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Complaints List Table */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-cream-200 rounded-2xl shadow-xs overflow-hidden">
               {complaintsQuery.isLoading ? (
-                <div className="p-12 text-center text-slate-400">Loading student complaints...</div>
+                <div className="p-12 text-center text-gray-400">Loading student complaints...</div>
               ) : complaintsQuery.data?.complaints?.length === 0 ? (
-                <div className="p-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
-                  <Inbox className="w-8 h-8 text-slate-300" />
+                <div className="p-12 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
+                  <Inbox className="w-8 h-8 text-cream-300" />
                   <p className="text-sm font-medium">No complaints match the selected filter.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-cream-50 text-gray-700 text-xs uppercase font-semibold border-b border-cream-200">
                       <tr>
                         <th className="py-3.5 px-4">Category &amp; Raised</th>
                         <th className="py-3.5 px-4">Order / Bag</th>
@@ -1208,30 +1208,30 @@ export default function AdminDashboardPage() {
                         <th className="py-3.5 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-cream-100">
                       {complaintsQuery.data?.complaints.map((complaint) => {
                         const badge = getComplaintStatusBadge(complaint.status);
                         const isActionable = complaint.status === 'OPEN' || complaint.status === 'UNDER_REVIEW';
 
                         return (
-                          <tr key={complaint.id} className="hover:bg-slate-50/80 transition align-top">
+                          <tr key={complaint.id} className="hover:bg-cream-50 transition align-top">
                             {/* Category & Date */}
                             <td className="py-3.5 px-4 whitespace-nowrap">
-                              <div className="font-semibold text-slate-900 text-xs">
+                              <div className="font-semibold text-gray-900 text-xs">
                                 {formatCategory(complaint.category)}
                               </div>
-                              <div className="text-[11px] text-slate-400 mt-0.5">
+                              <div className="text-[11px] text-gray-400 mt-0.5">
                                 {formatDateTime(complaint.raisedAt)}
                               </div>
                             </td>
 
                             {/* Order & Bag */}
                             <td className="py-3.5 px-4 whitespace-nowrap">
-                              <div className="font-mono font-bold text-slate-900 text-xs">
+                              <div className="font-mono font-bold text-gray-900 text-xs">
                                 {complaint.order.orderCode}
                               </div>
                               <div className="mt-1">
-                                <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px]">
+                                <span className="font-semibold text-gray-700 bg-cream-100 px-2 py-0.5 rounded border border-cream-200 text-[11px]">
                                   {complaint.order.bagNumber}
                                 </span>
                               </div>
@@ -1239,13 +1239,13 @@ export default function AdminDashboardPage() {
 
                             {/* Student */}
                             <td className="py-3.5 px-4 whitespace-nowrap">
-                              <div className="text-slate-900 font-medium text-xs">
+                              <div className="text-gray-900 font-medium text-xs">
                                 {complaint.order.student.name}
                               </div>
-                              <div className="text-[11px] text-slate-400">
+                              <div className="text-[11px] text-gray-400">
                                 {complaint.order.student.email}
                               </div>
-                              <div className="text-[11px] text-slate-500 font-mono">
+                              <div className="text-[11px] text-gray-500 font-mono">
                                 {complaint.order.student.mobileNumber}
                               </div>
                             </td>
@@ -1253,7 +1253,7 @@ export default function AdminDashboardPage() {
                             {/* Description & Resolution Notes */}
                             <td className="py-3.5 px-4 max-w-xs">
                               <p
-                                className="text-xs text-slate-800 line-clamp-2 leading-relaxed"
+                                className="text-xs text-gray-800 line-clamp-2 leading-relaxed"
                                 title={complaint.description}
                               >
                                 {complaint.description}
@@ -1281,12 +1281,12 @@ export default function AdminDashboardPage() {
                                 {badge.label}
                               </span>
                               {complaint.handledBy && (
-                                <div className="text-[11px] text-slate-400 mt-1">
-                                  Handled by: <span className="font-medium text-slate-600">@{complaint.handledBy.username}</span>
+                                <div className="text-[11px] text-gray-400 mt-1">
+                                  Handled by: <span className="font-medium text-gray-600">@{complaint.handledBy.username}</span>
                                 </div>
                               )}
                               {complaint.resolvedAt && (
-                                <div className="text-[11px] text-slate-400">
+                                <div className="text-[11px] text-gray-400">
                                   Resolved: {formatDate(complaint.resolvedAt)}
                                 </div>
                               )}
@@ -1341,7 +1341,7 @@ export default function AdminDashboardPage() {
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-xs text-slate-400 italic">Read-only</span>
+                                <span className="text-xs text-gray-400 italic">Read-only</span>
                               )}
                             </td>
                           </tr>
@@ -1354,8 +1354,8 @@ export default function AdminDashboardPage() {
 
               {/* Pagination Controls */}
               {complaintsQuery.data?.pagination && complaintsQuery.data.pagination.totalPages > 1 && (
-                <div className="p-4 border-t border-slate-200 bg-slate-50/60 flex items-center justify-between">
-                  <div className="text-xs text-slate-500">
+                <div className="p-4 border-t border-cream-200 bg-cream-50/50 flex items-center justify-between">
+                  <div className="text-xs text-gray-500">
                     Page {complaintsQuery.data.pagination.page} of{' '}
                     {complaintsQuery.data.pagination.totalPages}
                   </div>
@@ -1363,7 +1363,7 @@ export default function AdminDashboardPage() {
                     <button
                       onClick={() => setComplaintPage((p) => Math.max(1, p - 1))}
                       disabled={complaintPage <= 1 || complaintsQuery.isFetching}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-cream-200 text-gray-700 hover:bg-cream-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
                     >
                       <ChevronLeft className="w-4 h-4" />
                       Prev
@@ -1378,7 +1378,7 @@ export default function AdminDashboardPage() {
                         complaintPage >= (complaintsQuery.data?.pagination.totalPages || 1) ||
                         complaintsQuery.isFetching
                       }
-                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-cream-200 text-gray-700 hover:bg-cream-100 rounded-lg text-xs font-medium disabled:opacity-50 transition"
                     >
                       Next
                       <ChevronRight className="w-4 h-4" />
@@ -1394,11 +1394,11 @@ export default function AdminDashboardPage() {
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             {analyticsQuery.isLoading ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center shadow-xs">
+              <div className="bg-white border border-cream-200 rounded-2xl p-16 text-center shadow-xs">
                 <div className="inline-block animate-spin mb-3">
-                  <RefreshCw className="w-6 h-6 text-blue-600" />
+                  <RefreshCw className="w-6 h-6 text-maroon-600" />
                 </div>
-                <p className="text-sm font-medium text-slate-600">Calculating system metrics &amp; analytics...</p>
+                <p className="text-sm font-medium text-gray-600">Calculating system metrics &amp; analytics...</p>
               </div>
             ) : analyticsQuery.isError ? (
               <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center text-rose-800 shadow-xs">
@@ -1420,23 +1420,23 @@ export default function AdminDashboardPage() {
                 {/* Metric Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   {/* Turnaround Time Card */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                  <div className="bg-white border border-cream-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
                         Average Turnaround
                       </span>
-                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-cream-100 text-maroon-700 flex items-center justify-center">
                         <Clock className="w-5 h-5" />
                       </div>
                     </div>
                     <div>
-                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                      <div className="text-3xl font-extrabold text-gray-900 tracking-tight">
                         {analyticsData.turnaroundTime.averageHours}{' '}
-                        <span className="text-base font-semibold text-slate-500">hrs</span>
+                        <span className="text-base font-semibold text-gray-500">hrs</span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                      <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
                         <span>Based on</span>
-                        <span className="font-semibold text-slate-800">
+                        <span className="font-semibold text-gray-800">
                           {analyticsData.turnaroundTime.orderCount}
                         </span>
                         <span>collected order{analyticsData.turnaroundTime.orderCount === 1 ? '' : 's'}</span>
@@ -1445,9 +1445,9 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* Count Mismatch Rate Card */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                  <div className="bg-white border border-cream-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
                         Count Mismatch Rate
                       </span>
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
@@ -1459,15 +1459,15 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                      <div className="text-3xl font-extrabold text-gray-900 tracking-tight">
                         {analyticsData.countMismatchRate.percentage}%
                       </div>
-                      <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
-                        <span className="font-semibold text-slate-800">
+                      <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                        <span className="font-semibold text-gray-800">
                           {analyticsData.countMismatchRate.mismatched}
                         </span>
                         <span>of</span>
-                        <span className="font-semibold text-slate-800">
+                        <span className="font-semibold text-gray-800">
                           {analyticsData.countMismatchRate.total}
                         </span>
                         <span>verified intake orders</span>
@@ -1476,20 +1476,20 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* Total Managed Volume */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                  <div className="bg-white border border-cream-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
                         Total Orders Recorded
                       </span>
-                      <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-cream-100 text-maroon-700 flex items-center justify-center">
                         <Layers className="w-5 h-5" />
                       </div>
                     </div>
                     <div>
-                      <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                      <div className="text-3xl font-extrabold text-gray-900 tracking-tight">
                         {totalOrdersInBreakdown}
                       </div>
-                      <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                      <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
                         <span className="font-semibold text-emerald-600">
                           {analyticsData.statusBreakdown.COLLECTED || 0}
                         </span>
@@ -1500,21 +1500,21 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Second Row: Peak Submission Hours (24-Bar Histogram) */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                <div className="bg-white border border-cream-200 rounded-2xl p-6 shadow-xs">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                     <div>
-                      <h3 className="font-bold text-base text-slate-800">Peak Submission Hours (24h)</h3>
-                      <p className="text-xs text-slate-500">
+                      <h3 className="font-serif font-bold text-base text-gray-900">Peak Submission Hours (24h)</h3>
+                      <p className="text-xs text-gray-500">
                         Hourly distribution of student drop-offs throughout the day (00:00 – 23:00 UTC).
                       </p>
                     </div>
-                    <div className="text-[11px] text-slate-400 italic">
+                    <div className="text-[11px] text-gray-400 italic">
                       *Times aggregated in server UTC
                     </div>
                   </div>
 
                   {/* CSS-Based 24-Bar Histogram */}
-                  <div className="h-48 flex items-end gap-1.5 sm:gap-2 pt-6 pb-2 border-b border-slate-200">
+                  <div className="h-48 flex items-end gap-1.5 sm:gap-2 pt-6 pb-2 border-b border-cream-200">
                     {analyticsData.peakSubmissionHours.map((count, hour) => {
                       const heightPercent =
                         count > 0
@@ -1527,7 +1527,7 @@ export default function AdminDashboardPage() {
                           className="flex-1 flex flex-col items-center h-full justify-end group relative"
                         >
                           {/* Tooltip on hover */}
-                          <div className="opacity-0 group-hover:opacity-100 transition pointer-events-none absolute -top-8 bg-slate-900 text-white text-[10px] font-mono px-2 py-1 rounded shadow-md z-10 whitespace-nowrap">
+                          <div className="opacity-0 group-hover:opacity-100 transition pointer-events-none absolute -top-8 bg-gray-900 text-white text-[10px] font-mono px-2 py-1 rounded shadow-md z-10 whitespace-nowrap">
                             {String(hour).padStart(2, '0')}:00 UTC — {count} order{count === 1 ? '' : 's'}
                           </div>
 
@@ -1536,8 +1536,8 @@ export default function AdminDashboardPage() {
                             style={{ height: `${heightPercent}%` }}
                             className={`w-full rounded-t transition-all ${
                               count > 0
-                                ? 'bg-blue-600 hover:bg-blue-500'
-                                : 'bg-slate-100 hover:bg-slate-200'
+                                ? 'bg-maroon-700 hover:bg-maroon-600'
+                                : 'bg-cream-100 hover:bg-cream-200'
                             }`}
                           />
                         </div>
@@ -1546,7 +1546,7 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* X-Axis Hour Labels */}
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-2">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-gray-400 pt-2">
                     <span>00:00</span>
                     <span className="hidden sm:inline">04:00</span>
                     <span>08:00</span>
@@ -1560,9 +1560,9 @@ export default function AdminDashboardPage() {
                 {/* Third Row: Status Breakdown & Complaint Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Status Breakdown Section */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-                    <h3 className="font-bold text-base text-slate-800 mb-1">Lifecycle Status Breakdown</h3>
-                    <p className="text-xs text-slate-500 mb-4">
+                  <div className="bg-white border border-cream-200 rounded-2xl p-6 shadow-xs">
+                    <h3 className="font-serif font-bold text-base text-gray-900 mb-1">Lifecycle Status Breakdown</h3>
+                    <p className="text-xs text-gray-500 mb-4">
                       Real-time distribution of orders across active stages.
                     </p>
 
@@ -1576,13 +1576,13 @@ export default function AdminDashboardPage() {
                         return (
                           <div key={status} className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="font-semibold text-slate-700">{status}</span>
-                              <span className="font-mono text-slate-500">
+                              <span className="font-semibold text-gray-700">{status}</span>
+                              <span className="font-mono text-gray-500">
                                 {count}{' '}
-                                <span className="text-[11px] text-slate-400">({percent}%)</span>
+                                <span className="text-[11px] text-gray-400">({percent}%)</span>
                               </span>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div className="w-full bg-cream-100 rounded-full h-2 overflow-hidden">
                               <div
                                 style={{ width: `${percent}%` }}
                                 className={`h-full rounded-full transition-all duration-300 ${
@@ -1607,19 +1607,19 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* Complaint Frequency Section */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+                  <div className="bg-white border border-cream-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-base text-slate-800">Complaint Frequency</h3>
-                        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        <h3 className="font-serif font-bold text-base text-gray-900">Complaint Frequency</h3>
+                        <span className="text-xs font-semibold text-gray-500 bg-cream-100 px-2 py-0.5 rounded-full">
                           {totalComplaints} Total
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 mb-4">
+                      <p className="text-xs text-gray-500 mb-4">
                         Reported student discrepancies and issues categorized by type.
                       </p>
 
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-cream-100">
                         {Object.entries(analyticsData.complaintFrequency).map(([category, count]) => {
                           const percent =
                             totalComplaints > 0 ? Math.round((count / totalComplaints) * 100) : 0;
@@ -1627,14 +1627,14 @@ export default function AdminDashboardPage() {
                           return (
                             <div key={category} className="py-2.5 flex items-center justify-between text-xs">
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-slate-400" />
-                                <span className="font-medium text-slate-700 capitalize">
+                                <div className="w-2 h-2 rounded-full bg-cream-400" />
+                                <span className="font-medium text-gray-700 capitalize">
                                   {category.replace('_', ' ')}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 font-mono text-slate-600">
-                                <span className="font-semibold text-slate-900">{count}</span>
-                                <span className="text-[11px] text-slate-400">({percent}%)</span>
+                              <div className="flex items-center gap-2 font-mono text-gray-600">
+                                <span className="font-semibold text-gray-900">{count}</span>
+                                <span className="text-[11px] text-gray-400">({percent}%)</span>
                               </div>
                             </div>
                           );
@@ -1643,7 +1643,7 @@ export default function AdminDashboardPage() {
                     </div>
 
                     {totalComplaints === 0 && (
-                      <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                      <div className="mt-4 p-4 rounded-xl bg-cream-50 border border-cream-200 text-center text-xs text-gray-500 flex items-center justify-center gap-1.5">
                         <Inbox className="w-4 h-4" />
                         <span>No student complaints have been logged in the system yet.</span>
                       </div>
@@ -1658,27 +1658,27 @@ export default function AdminDashboardPage() {
         {/* TAB 5: ANNOUNCEMENTS */}
         {activeTab === 'announcements' && (
           <div className="space-y-4">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-              <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="bg-white border border-cream-200 rounded-2xl shadow-xs overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-cream-200 bg-cream-50 flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-slate-800">Campus Announcements</h2>
-                  <p className="text-xs text-slate-500">
+                  <h2 className="font-serif text-lg font-bold text-gray-900">Campus Announcements</h2>
+                  <p className="text-xs text-gray-500">
                     Broadcast operational updates, notices, and schedule alerts to students.
                   </p>
                 </div>
-                <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                <div className="text-xs font-semibold text-gray-700 bg-cream-100 px-2.5 py-1 rounded-full border border-cream-200">
                   {announcementsQuery.data?.pagination.totalCount || 0} Total Announcements
                 </div>
               </div>
 
               {announcementsQuery.isLoading ? (
-                <div className="p-12 text-center text-slate-400">Loading announcements...</div>
+                <div className="p-12 text-center text-gray-400">Loading announcements...</div>
               ) : announcementsQuery.data?.announcements.length === 0 ? (
-                <div className="p-12 text-center text-slate-400">No announcements found.</div>
+                <div className="p-12 text-center text-gray-400">No announcements found.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-cream-50 text-gray-700 text-xs uppercase font-semibold border-b border-cream-200">
                       <tr>
                         <th className="py-3.5 px-4">Title &amp; Content</th>
                         <th className="py-3.5 px-4">Author</th>
@@ -1687,24 +1687,24 @@ export default function AdminDashboardPage() {
                         <th className="py-3.5 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-cream-100">
                       {announcementsQuery.data?.announcements.map((announcement) => (
-                        <tr key={announcement.id} className="hover:bg-slate-50/80 transition">
+                        <tr key={announcement.id} className="hover:bg-cream-50 transition">
                           <td className="py-3.5 px-4 max-w-md">
-                            <div className="font-semibold text-slate-900">{announcement.title}</div>
-                            <div className="text-xs text-slate-500 line-clamp-2 mt-0.5 whitespace-pre-wrap">
+                            <div className="font-semibold text-gray-900">{announcement.title}</div>
+                            <div className="text-xs text-gray-500 line-clamp-2 mt-0.5 whitespace-pre-wrap">
                               {announcement.body}
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-xs text-slate-700">
+                          <td className="py-3.5 px-4 text-xs text-gray-700">
                             {announcement.createdBy?.name || 'Admin'}
                             {announcement.createdBy?.role && (
-                              <span className="text-[10px] text-slate-400 block uppercase">
+                              <span className="text-[10px] text-gray-400 block uppercase">
                                 {announcement.createdBy.role}
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-4 text-xs text-slate-500 whitespace-nowrap">
+                          <td className="py-3.5 px-4 text-xs text-gray-500 whitespace-nowrap">
                             {formatDateTime(announcement.createdAt)}
                           </td>
                           <td className="py-3.5 px-4 whitespace-nowrap">
@@ -1712,12 +1712,12 @@ export default function AdminDashboardPage() {
                               className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full ${
                                 announcement.isActive
                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                  : 'bg-cream-100 text-gray-600 border border-cream-200'
                               }`}
                             >
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
-                                  announcement.isActive ? 'bg-emerald-500' : 'bg-slate-400'
+                                  announcement.isActive ? 'bg-emerald-500' : 'bg-gray-400'
                                 }`}
                               />
                               {announcement.isActive ? 'Active' : 'Archived'}
@@ -1727,7 +1727,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => handleToggleAnnouncementStatus(announcement)}
                               disabled={toggleAnnouncementStatusMutation.isPending}
-                              className={`px-3 py-1 text-xs font-semibold rounded-lg border transition ${
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg border transition cursor-pointer ${
                                 announcement.isActive
                                   ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
                                   : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
@@ -1745,8 +1745,8 @@ export default function AdminDashboardPage() {
 
               {/* Pagination Controls */}
               {announcementsQuery.data && announcementsQuery.data.pagination.totalPages > 1 && (
-                <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
+                <div className="p-4 border-t border-cream-200 bg-cream-50 flex items-center justify-between">
+                  <span className="text-xs text-gray-500">
                     Page {announcementsQuery.data.pagination.page} of{' '}
                     {announcementsQuery.data.pagination.totalPages}
                   </span>
@@ -1754,7 +1754,7 @@ export default function AdminDashboardPage() {
                     <button
                       onClick={() => setAnnouncementPage((prev) => Math.max(prev - 1, 1))}
                       disabled={announcementPage <= 1}
-                      className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      className="p-1.5 rounded-lg border border-cream-200 bg-white text-gray-700 hover:bg-cream-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
@@ -1768,7 +1768,7 @@ export default function AdminDashboardPage() {
                         announcementPage >=
                         (announcementsQuery.data?.pagination.totalPages || 1)
                       }
-                      className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      className="p-1.5 rounded-lg border border-cream-200 bg-white text-gray-700 hover:bg-cream-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
@@ -1782,16 +1782,16 @@ export default function AdminDashboardPage() {
 
       {/* CREATE ANNOUNCEMENT MODAL */}
       {isCreateAnnouncementOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="fixed inset-0 bg-maroon-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-maroon-900 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Megaphone className="w-5 h-5 text-purple-400" />
-                <h3 className="font-bold text-base">New Announcement</h3>
+                <Megaphone className="w-5 h-5 text-maroon-200" />
+                <h3 className="font-serif font-bold text-base">New Announcement</h3>
               </div>
               <button
                 onClick={() => setIsCreateAnnouncementOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                className="text-cream-200 hover:text-white p-1 rounded-lg transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1806,7 +1806,7 @@ export default function AdminDashboardPage() {
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   Title
                 </label>
                 <input
@@ -1814,12 +1814,12 @@ export default function AdminDashboardPage() {
                   value={newAnnouncementTitle}
                   onChange={(e) => setNewAnnouncementTitle(e.target.value)}
                   placeholder="E.g., Holiday Schedule for Laundry"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-600 outline-none"
+                  className="w-full px-3 py-2 border border-cream-300 rounded-lg text-sm focus:ring-2 focus:ring-maroon-700 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   Message / Body
                 </label>
                 <textarea
@@ -1827,22 +1827,22 @@ export default function AdminDashboardPage() {
                   onChange={(e) => setNewAnnouncementBody(e.target.value)}
                   placeholder="Details of the announcement..."
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-600 outline-none resize-none"
+                  className="w-full px-3 py-2 border border-cream-300 rounded-lg text-sm focus:ring-2 focus:ring-maroon-700 outline-none resize-none"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-cream-100">
                 <button
                   type="button"
                   onClick={() => setIsCreateAnnouncementOpen(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
+                  className="px-4 py-2 border border-cream-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-cream-50 transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createAnnouncementMutation.isPending}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-purple-400"
+                  className="px-4 py-2 bg-maroon-700 hover:bg-maroon-800 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-maroon-400 cursor-pointer shadow-xs"
                 >
                   {createAnnouncementMutation.isPending ? 'Posting...' : 'Post Announcement'}
                 </button>
@@ -1854,16 +1854,16 @@ export default function AdminDashboardPage() {
 
       {/* CREATE STAFF MODAL */}
       {isCreateStaffOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="fixed inset-0 bg-maroon-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-maroon-900 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-blue-400" />
-                <h3 className="font-bold text-base">Register Staff Account</h3>
+                <Users className="w-5 h-5 text-maroon-200" />
+                <h3 className="font-serif font-bold text-base">Register Staff Account</h3>
               </div>
               <button
                 onClick={() => setIsCreateStaffOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                className="text-cream-200 hover:text-white p-1 rounded-lg transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1878,27 +1878,27 @@ export default function AdminDashboardPage() {
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                  <User className="w-4 h-4 text-gray-400 absolute left-3 top-3 pointer-events-none" />
                   <input
                     type="text"
                     value={newStaffName}
                     onChange={(e) => setNewStaffName(e.target.value)}
                     placeholder="e.g. John Doe"
-                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full pl-9 pr-3 py-2 border border-cream-300 rounded-lg text-sm focus:ring-2 focus:ring-maroon-700 outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   Username
                 </label>
                 <div className="relative">
-                  <span className="text-slate-400 absolute left-3 top-2 text-sm font-mono pointer-events-none">
+                  <span className="text-gray-400 absolute left-3 top-2 text-sm font-mono pointer-events-none">
                     @
                   </span>
                   <input
@@ -1906,29 +1906,29 @@ export default function AdminDashboardPage() {
                     value={newStaffUsername}
                     onChange={(e) => setNewStaffUsername(e.target.value)}
                     placeholder="washer_john"
-                    className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 outline-none font-mono"
+                    className="w-full pl-8 pr-3 py-2 border border-cream-300 rounded-lg text-sm focus:ring-2 focus:ring-maroon-700 outline-none font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   Password (min 6 characters)
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3 pointer-events-none" />
                   <input
                     type="password"
                     value={newStaffPassword}
                     onChange={(e) => setNewStaffPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full pl-9 pr-3 py-2 border border-cream-300 rounded-lg text-sm focus:ring-2 focus:ring-maroon-700 outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   Role
                 </label>
                 <select
@@ -1936,7 +1936,7 @@ export default function AdminDashboardPage() {
                   onChange={(e) =>
                     setNewStaffRole(e.target.value as 'WASHER' | 'COLLECTION' | 'ADMIN')
                   }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 outline-none"
+                  className="w-full px-3 py-2 border border-cream-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-maroon-700 outline-none"
                 >
                   <option value="WASHER">Washer (Intake &amp; Wash Operations)</option>
                   <option value="COLLECTION">Collection (Desk &amp; Handover)</option>
@@ -1944,18 +1944,18 @@ export default function AdminDashboardPage() {
                 </select>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-cream-100">
                 <button
                   type="button"
                   onClick={() => setIsCreateStaffOpen(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
+                  className="px-4 py-2 border border-cream-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-cream-50 transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createStaffMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-blue-400"
+                  className="px-4 py-2 bg-maroon-700 hover:bg-maroon-800 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-maroon-400 cursor-pointer shadow-xs"
                 >
                   {createStaffMutation.isPending ? 'Saving...' : 'Create Account'}
                 </button>
@@ -1967,14 +1967,14 @@ export default function AdminDashboardPage() {
 
       {/* RESOLVE COMPLAINT MODAL */}
       {isResolveModalOpen && activeComplaintForResolve && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="fixed inset-0 bg-maroon-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-maroon-900 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <CheckSquare className="w-5 h-5 text-emerald-400" />
                 <div>
-                  <h3 className="font-bold text-base">Resolve Student Complaint</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="font-serif font-bold text-base">Resolve Student Complaint</h3>
+                  <p className="text-xs text-cream-200">
                     Order #{activeComplaintForResolve.order.orderCode} •{' '}
                     {formatCategory(activeComplaintForResolve.category)}
                   </p>
@@ -1985,7 +1985,7 @@ export default function AdminDashboardPage() {
                   if (!updateComplaintMutation.isPending) setIsResolveModalOpen(false);
                 }}
                 disabled={updateComplaintMutation.isPending}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                className="text-cream-200 hover:text-white p-1 rounded-lg transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2000,18 +2000,18 @@ export default function AdminDashboardPage() {
               )}
 
               {/* Original Complaint Context */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-xs">
-                <span className="font-semibold text-slate-700 block">
+              <div className="p-3 bg-cream-50 border border-cream-200 rounded-xl space-y-1 text-xs">
+                <span className="font-semibold text-gray-700 block">
                   Student Issue ({activeComplaintForResolve.order.student.name}):
                 </span>
-                <p className="text-slate-600 italic leading-relaxed">
+                <p className="text-gray-600 italic leading-relaxed">
                   "{activeComplaintForResolve.description}"
                 </p>
               </div>
 
               {/* Resolution Note Textarea */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                   Resolution Note <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -2025,26 +2025,26 @@ export default function AdminDashboardPage() {
                   }}
                   disabled={updateComplaintMutation.isPending}
                   placeholder="Explain the resolution provided (e.g., Located missing 2 shirts in section B-4; Delivered back to student's room; Refund initiated)..."
-                  className="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-600 outline-none transition"
+                  className="w-full p-3 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:ring-maroon-700 outline-none transition"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-gray-400 mt-1">
                   This note will be recorded permanently in the audit trail and visible to the student on their tracking page.
                 </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-cream-100">
                 <button
                   type="button"
                   onClick={() => setIsResolveModalOpen(false)}
                   disabled={updateComplaintMutation.isPending}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
+                  className="px-4 py-2 border border-cream-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-cream-50 transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={updateComplaintMutation.isPending}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-emerald-400 shadow-xs"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-emerald-400 shadow-xs cursor-pointer"
                 >
                   {updateComplaintMutation.isPending ? 'Saving...' : 'Confirm Resolution'}
                 </button>

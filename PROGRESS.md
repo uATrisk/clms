@@ -59,6 +59,7 @@
   - [x] Handle `409 Conflict` in `/submit` with direct navigation link to the in-flight active order
   - [x] Apply AppShell and maroon/cream design system to an authenticated student dashboard home page
   - [x] Implement Student Order History UI page (`/history`) with pagination and past order cards
+  - [x] Implement Static Help Center FAQ UI page (`/help`) inside AppShell
 
 ---
 

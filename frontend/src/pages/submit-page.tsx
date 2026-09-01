@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Loader2, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, ShoppingBag, AlertCircle, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/auth-context';
 
@@ -21,6 +21,7 @@ export default function SubmitPage() {
   const navigate = useNavigate();
   const { token, user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [existingOrder, setExistingOrder] = useState<{ orderCode: string; status: string } | null>(null);
 
   const {
     register,
@@ -35,6 +36,7 @@ export default function SubmitPage() {
 
   const onSubmit = async (data: SubmitFormOutput) => {
     setServerError(null);
+    setExistingOrder(null);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/orders`,
@@ -51,12 +53,17 @@ export default function SubmitPage() {
         navigate(`/track/${order.orderCode}`);
       }
     } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message ||
-        error.response?.data?.message ||
-        error.message ||
-        'An unexpected error occurred. Please try again.';
-      setServerError(message);
+      if (error.response?.status === 409 && error.response?.data?.error?.details?.orderCode) {
+        setExistingOrder(error.response.data.error.details);
+        setServerError(error.response?.data?.error?.message || 'You already have an active laundry request.');
+      } else {
+        const message =
+          error.response?.data?.error?.message ||
+          error.response?.data?.message ||
+          error.message ||
+          'An unexpected error occurred. Please try again.';
+        setServerError(message);
+      }
     }
   };
 
@@ -99,15 +106,36 @@ export default function SubmitPage() {
             </Link>
           </div>
 
-          {/* Global Error Banner */}
-          {serverError && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-              <div className="flex">
-                <div className="flex-1">
-                  <p className="text-sm text-red-700 font-medium">{serverError}</p>
+          {/* 409 Active Order Conflict Banner */}
+          {existingOrder ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3 shadow-sm">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-amber-900">Active Order In Progress</h4>
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    {serverError || `You already have an active request (${existingOrder.orderCode}). Please wait until your bag is collected before dropping off a new one.`}
+                  </p>
                 </div>
               </div>
+              <Link
+                to={`/track/${existingOrder.orderCode}`}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm"
+              >
+                <span>View Order #{existingOrder.orderCode}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
+          ) : (
+            serverError && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+                <div className="flex">
+                  <div className="flex-1">
+                    <p className="text-sm text-red-700 font-medium">{serverError}</p>
+                  </div>
+                </div>
+              </div>
+            )
           )}
 
           {/* Form */}

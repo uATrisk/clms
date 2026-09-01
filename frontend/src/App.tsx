@@ -11,6 +11,7 @@ import { Header } from './components/header';
 
 import LandingPage from './pages/landing-page';
 import TrackPage from './pages/track-page';
+import TrackSearchPage from './pages/track-search-page';
 import TrackDetailsPage from './pages/track-details-page';
 import SubmitPage from './pages/submit-page';
 import ProfilePage from './pages/profile-page';
@@ -39,6 +40,14 @@ function MainContent() {
             element={
               <ProtectedRoute>
                 <TrackPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/track/search"
+            element={
+              <ProtectedRoute>
+                <TrackSearchPage />
               </ProtectedRoute>
             }
           />

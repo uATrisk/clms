@@ -290,4 +290,25 @@ We enforce a strict single-active-order rule on the backend:
 ### Status
 Accepted
 
+---
+
+## [2026-09-01] ADR 015: Frontend "My Current Order" Routing & 409 Conflict UX
+
+### Context
+With single active order enforcement on the backend (ADR 014), the student tracking UX needed to eliminate the manual step of entering an `orderCode` when checking on active laundry, while preserving the ability to search for historical or specific orders by code. Furthermore, if a student navigates to `/submit` while an active order is in flight, the form should gracefully guide them to their active order rather than displaying an opaque error banner.
+
+### Decision
+1. **Intelligent `/track` Routing:** `/track` now automatically triggers `GET /api/orders/my-active`:
+   - If an active order exists (200), the student is automatically forwarded to `/track/:orderCode` displaying the full timeline and OTP status.
+   - If no active order exists (404), `/track` renders a clean empty state indicating no laundry is in progress, with a prominent call-to-action button to submit a new laundry bag.
+2. **Preserved Code-Based Tracking (`/track/search`):** The legacy manual order code input view was moved to `/track/search`. Secondary links on `/track` and `/track/:orderCode` allow students to easily search historical or specific orders by code without triggering active-order redirects.
+3. **Graceful 409 Conflict Handling on `/submit`:** When `POST /api/orders` returns `409 Conflict` containing the in-flight `orderCode` and `status`, `SubmitPage` captures the error details and presents an amber contextual alert banner with a direct "View Order #XXXX" link navigating straight to `/track/:orderCode`.
+
+### Rationale
+- **Zero-Friction Access:** Students no longer need to retain, copy, or recall SMS tracking codes to monitor active laundry.
+- **Predictable Error Recovery:** Replaces generic submission rejections with actionable routing directly to the order blocking submission.
+
+### Status
+Accepted
+
 

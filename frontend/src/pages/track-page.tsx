@@ -1,56 +1,86 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { Loader2, PlusCircle, Search, Inbox, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../contexts/auth-context';
 
 export default function TrackPage() {
-  const [orderCode, setOrderCode] = useState('');
+  const { token } = useAuth();
   const navigate = useNavigate();
 
-  const handleTrack = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (orderCode.trim()) {
-      navigate(`/track/${orderCode.trim()}`);
-    }
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ['my-active-order', token],
+    queryFn: async () => {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/orders/my-active`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return res.data;
+    },
+    retry: false,
+  });
 
+  useEffect(() => {
+    if (data?.order?.orderCode) {
+      navigate(`/track/${data.order.orderCode}`, { replace: true });
+    }
+  }, [data, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <p className="mt-4 text-gray-500 text-sm">Checking for active laundry orders...</p>
+      </div>
+    );
+  }
+
+  // 404 or no active order found
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 space-y-6">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 text-center space-y-6">
         <div className="flex items-center text-blue-600 mb-2">
-          <Link to="/" className="flex items-center hover:underline">
+          <Link to="/" className="flex items-center hover:underline focus:outline-none focus:underline">
             <ArrowLeft className="w-4 h-4 mr-1" />
-            <span className="text-sm font-medium">Back</span>
+            <span className="text-sm font-medium">Back to Home</span>
           </Link>
         </div>
 
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Track Laundry</h1>
-          <p className="text-gray-500 mt-2 text-sm">Enter the order code you received via SMS to check the current status.</p>
+        <div className="mx-auto bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center">
+          <Inbox className="w-8 h-8 text-blue-600" />
         </div>
 
-        <form onSubmit={handleTrack} className="space-y-4">
-          <div>
-            <label htmlFor="orderCode" className="block text-sm font-medium text-gray-700 mb-1">
-              Order Code
-            </label>
-            <input
-              type="text"
-              id="orderCode"
-              value={orderCode}
-              onChange={(e) => setOrderCode(e.target.value)}
-              placeholder="e.g. LN-8842-A3B9"
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all uppercase"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={!orderCode.trim()}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">No Active Orders</h1>
+          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+            You don't have an active laundry request right now. Drop off a bag to get started!
+          </p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <Link
+            to="/submit"
+            className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 flex items-center justify-center transition-all"
           >
-            <Search className="w-5 h-5 mr-2" />
-            Track Request
-          </button>
-        </form>
+            <PlusCircle className="w-5 h-5 mr-2" />
+            Submit New Laundry
+          </Link>
+
+          <div className="pt-2">
+            <Link
+              to="/track/search"
+              className="text-sm text-gray-500 hover:text-blue-600 font-medium inline-flex items-center gap-1 transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              Track a different order by code
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

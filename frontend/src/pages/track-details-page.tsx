@@ -261,13 +261,19 @@ export default function TrackDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 sm:px-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
-        <div className="flex items-center text-blue-600 mb-2">
+        <div className="flex items-center justify-between text-blue-600 mb-2">
           <Link
-            to="/track"
+            to="/"
             className="flex items-center hover:underline focus:outline-none focus:underline"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            <span className="text-sm font-medium">Track another</span>
+            <span className="text-sm font-medium">Home</span>
+          </Link>
+          <Link
+            to="/track/search"
+            className="text-xs text-gray-500 hover:text-blue-600 font-medium transition-colors"
+          >
+            Search by code
           </Link>
         </div>
 

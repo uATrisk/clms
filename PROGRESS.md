@@ -56,6 +56,7 @@
   - [x] Implement dynamic `/track` landing page with automated `GET /api/orders/my-active` redirection & empty state
   - [x] Preserve manual order code tracking at `/track/search`
   - [x] Handle `409 Conflict` in `/submit` with direct navigation link to the in-flight active order
+  - [x] Apply AppShell and maroon/cream design system to an authenticated student dashboard home page
 
 ---
 

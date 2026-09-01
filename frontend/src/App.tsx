@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-import { AuthProvider } from './contexts/auth-context';
+import { AuthProvider, useAuth } from './contexts/auth-context';
 import { StaffAuthProvider } from './contexts/staff-auth-context';
 import { ProtectedRoute } from './components/protected-route';
 import { StaffProtectedRoute } from './components/staff-protected-route';
@@ -10,6 +10,7 @@ import { AdminProtectedRoute } from './components/admin-protected-route';
 import { Header } from './components/header';
 
 import LandingPage from './pages/landing-page';
+import DashboardPage from './pages/dashboard-page';
 import TrackPage from './pages/track-page';
 import TrackSearchPage from './pages/track-search-page';
 import TrackDetailsPage from './pages/track-details-page';
@@ -24,16 +25,30 @@ import AdminDashboardPage from './pages/admin-dashboard-page';
 
 const queryClient = new QueryClient();
 
+function HomeRoute() {
+  const { token } = useAuth();
+  if (token) {
+    return (
+      <ProtectedRoute>
+        <DashboardPage />
+      </ProtectedRoute>
+    );
+  }
+  return <LandingPage />;
+}
+
 function MainContent() {
   const location = useLocation();
+  const { token } = useAuth();
   const isStaffRoute = location.pathname.startsWith('/staff') || location.pathname.startsWith('/admin');
+  const isStudentDashboard = location.pathname === '/' && !!token;
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!isStaffRoute && <Header />}
+      {!isStaffRoute && !isStudentDashboard && <Header />}
       <main className="flex-1 flex flex-col">
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<HomeRoute />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/track"

@@ -9,6 +9,11 @@ import {
   getComplaintsList,
   updateComplaint,
 } from '../controllers/admin-controller';
+import {
+  getAdminAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+} from '../controllers/announcement-controller';
 
 const router = Router();
 
@@ -26,6 +31,11 @@ router.get('/orders', getOrdersList);
 // Complaints view & handling
 router.get('/complaints', getComplaintsList);
 router.patch('/complaints/:id', updateComplaint);
+
+// Announcements management
+router.get('/announcements', getAdminAnnouncements);
+router.post('/announcements', createAnnouncement);
+router.patch('/announcements/:id', updateAnnouncement);
 
 // Analytics
 router.get('/analytics/summary', getAnalyticsSummary);

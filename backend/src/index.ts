@@ -11,6 +11,7 @@ import studentRouter from './routes/student-router';
 import orderRouter from './routes/order-router';
 import staffRouter from './routes/staff-router';
 import adminRouter from './routes/admin-router';
+import announcementRouter from './routes/announcement-router';
 
 // Load environment config
 dotenv.config();
@@ -44,6 +45,7 @@ app.use('/api/students', studentRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/staff', staffRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/announcements', announcementRouter);
 
 // Undefined routes handler
 app.use((req: Request, res: Response, next: NextFunction) => {

@@ -365,28 +365,28 @@ export default function StaffOrdersPage() {
   const currentFetching = activeTab === 'queue' ? queueQuery.isFetching : activeQuery.isFetching;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-cream-50 flex flex-col font-sans">
       {/* Staff Top Navigation */}
-      <header className="bg-slate-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
+      <header className="bg-maroon-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-bold tracking-tight">CLMS Washer Operations</h1>
+            <h1 className="font-serif text-sm sm:text-base font-bold tracking-tight">CLMS Washer Operations</h1>
             <p className="text-[11px] text-slate-400">Intake &amp; Processing Dashboard</p>
           </div>
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="hidden md:flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+        <div className="hidden md:flex items-center gap-1.5 bg-maroon-800/80 p-1 rounded-xl border border-maroon-700/60">
           {staffUser?.role === 'ADMIN' && (
             <Link
               to="/admin/dashboard"
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
                 location.pathname === '/admin/dashboard'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                  ? 'bg-maroon-700 text-white shadow-xs'
+                  : 'text-slate-300 hover:text-white hover:bg-maroon-700/50'
               }`}
             >
               Admin Portal
@@ -396,8 +396,8 @@ export default function StaffOrdersPage() {
             to="/staff/orders"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               location.pathname === '/staff/orders'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-maroon-700 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-maroon-700/50'
             }`}
           >
             Washer Queue
@@ -406,8 +406,8 @@ export default function StaffOrdersPage() {
             to="/staff/collection"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               location.pathname === '/staff/collection'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-maroon-700 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-maroon-700/50'
             }`}
           >
             Collection Desk
@@ -419,7 +419,7 @@ export default function StaffOrdersPage() {
             <p className="text-xs font-medium text-slate-200">
               {staffUser?.name || staffUser?.username}
             </p>
-            <span className="text-[10px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded uppercase font-semibold tracking-wider">
+            <span className="text-[10px] bg-maroon-800 text-emerald-400 px-2 py-0.5 rounded uppercase font-semibold tracking-wider">
               {staffUser?.role}
             </span>
           </div>
@@ -427,7 +427,7 @@ export default function StaffOrdersPage() {
           <button
             onClick={staffLogout}
             title="Sign Out"
-            className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-red-900/40 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-red-700 transition cursor-pointer"
+            className="flex items-center gap-1.5 text-xs bg-maroon-800 hover:bg-red-900/40 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded-lg border border-maroon-700 hover:border-red-700 transition cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Sign Out</span>
@@ -436,13 +436,13 @@ export default function StaffOrdersPage() {
       </header>
 
       {/* Mobile Sub-Navigation Bar */}
-      <div className="md:hidden bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-center gap-2">
+      <div className="md:hidden bg-maroon-800 border-b border-maroon-700 px-4 py-2 flex items-center justify-center gap-2">
         <Link
           to="/staff/orders"
           className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold transition ${
             location.pathname === '/staff/orders'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-300 hover:bg-slate-700'
+              ? 'bg-maroon-700 text-white shadow-xs'
+              : 'text-slate-300 hover:bg-maroon-700'
           }`}
         >
           Washer Queue
@@ -451,8 +451,8 @@ export default function StaffOrdersPage() {
           to="/staff/collection"
           className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold transition ${
             location.pathname === '/staff/collection'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-300 hover:bg-slate-700'
+              ? 'bg-maroon-700 text-white shadow-xs'
+              : 'text-slate-300 hover:bg-maroon-700'
           }`}
         >
           Collection Desk
@@ -495,20 +495,20 @@ export default function StaffOrdersPage() {
         )}
 
         {/* Tab Selection Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-cream-200">
           <div className="flex items-center gap-2 bg-slate-200/70 p-1 rounded-xl w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('queue')}
               className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'queue'
-                  ? 'bg-white text-blue-700 shadow-xs'
+                  ? 'bg-white text-maroon-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Inbox className="w-4 h-4" />
               <span>Incoming Queue</span>
               {submittedOrders.length > 0 && (
-                <span className="bg-blue-100 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-maroon-100 text-maroon-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
                   {submittedOrders.length}
                 </span>
               )}
@@ -518,7 +518,7 @@ export default function StaffOrdersPage() {
               onClick={() => setActiveTab('active')}
               className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer ${
                 activeTab === 'active'
-                  ? 'bg-white text-blue-700 shadow-xs'
+                  ? 'bg-white text-maroon-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -539,7 +539,7 @@ export default function StaffOrdersPage() {
                 else activeQuery.refetch();
               }}
               disabled={currentFetching}
-              className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-lg shadow-xs transition cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 bg-white border border-cream-200 hover:bg-cream-50 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-lg shadow-xs transition cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${currentFetching ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
@@ -551,7 +551,7 @@ export default function StaffOrdersPage() {
         {activeTab === 'queue' && (
           <div>
             <div className="mb-4">
-              <h2 className="text-lg font-bold text-slate-900">Submitted Orders Queue</h2>
+              <h2 className="font-serif text-lg font-bold text-slate-900">Submitted Orders Queue</h2>
               <p className="text-xs text-slate-500">
                 Bags dropped off by students awaiting physical count verification and intake into wash cycle.
               </p>
@@ -570,7 +570,7 @@ export default function StaffOrdersPage() {
               </div>
             )}
 
-            <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-xs border border-cream-200 overflow-hidden">
               {currentLoading ? (
                 <div className="p-12 text-center text-slate-400">
                   <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
@@ -587,7 +587,7 @@ export default function StaffOrdersPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm text-slate-700">
-                    <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200 tracking-wider">
+                    <thead className="bg-cream-50 text-xs uppercase font-semibold text-slate-500 border-b border-cream-200 tracking-wider">
                       <tr>
                         <th scope="col" className="px-5 py-3.5">Order / Bag</th>
                         <th scope="col" className="px-5 py-3.5">Student Details</th>
@@ -596,18 +596,18 @@ export default function StaffOrdersPage() {
                         <th scope="col" className="px-5 py-3.5 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-cream-200">
                       {submittedOrders.map((order) => (
                         <tr
                           key={order.id}
-                          className="hover:bg-slate-50/80 transition-colors"
+                          className="hover:bg-cream-50/80 transition-colors"
                         >
                           <td className="px-5 py-4">
-                            <div className="font-mono font-bold text-blue-600 text-sm">
+                            <div className="font-mono font-bold text-maroon-700 text-sm">
                               {order.orderCode}
                             </div>
                             <div className="mt-1">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-cream-100 text-slate-800 border border-cream-200">
                                 Bag #{order.bagNumber}
                               </span>
                             </div>
@@ -624,7 +624,7 @@ export default function StaffOrdersPage() {
                           </td>
 
                           <td className="px-5 py-4 text-center">
-                            <span className="inline-block bg-slate-100 text-slate-900 font-bold px-3 py-1 rounded-lg text-sm border border-slate-200">
+                            <span className="inline-block bg-cream-100 text-slate-900 font-bold px-3 py-1 rounded-lg text-sm border border-cream-200">
                               {order.selfReportedCount} pcs
                             </span>
                           </td>
@@ -636,7 +636,7 @@ export default function StaffOrdersPage() {
                           <td className="px-5 py-4 text-right whitespace-nowrap">
                             <button
                               onClick={() => handleOpenAcceptModal(order)}
-                              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-xs transition cursor-pointer"
+                              className="inline-flex items-center gap-1.5 bg-maroon-700 hover:bg-maroon-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-xs transition cursor-pointer"
                             >
                               <CheckCircle className="w-3.5 h-3.5" />
                               <span>Accept &amp; Count</span>
@@ -657,7 +657,7 @@ export default function StaffOrdersPage() {
           <div>
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Active Wash &amp; Processing Orders</h2>
+                <h2 className="font-serif text-lg font-bold text-slate-900">Active Wash &amp; Processing Orders</h2>
                 <p className="text-xs text-slate-500">
                   Orders physically accepted and currently in the washing, drying, or pressing cycle. Set ETAs or mark ready once finished.
                 </p>
@@ -708,7 +708,7 @@ export default function StaffOrdersPage() {
               </div>
             )}
 
-            <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-xs border border-cream-200 overflow-hidden">
               {currentLoading ? (
                 <div className="p-12 text-center text-slate-400">
                   <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-400" />
@@ -725,7 +725,7 @@ export default function StaffOrdersPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm text-slate-700">
-                    <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200 tracking-wider">
+                    <thead className="bg-cream-50 text-xs uppercase font-semibold text-slate-500 border-b border-cream-200 tracking-wider">
                       <tr>
                         <th scope="col" className="px-4 py-3.5 w-10 text-center">
                           <input
@@ -738,7 +738,7 @@ export default function StaffOrdersPage() {
                             onChange={() => toggleAllSelection(activeOrders)}
                             disabled={!activeOrders.some((o) => o.status === 'PROCESSING')}
                             aria-label="Select all processing orders"
-                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-40"
+                            className="w-4 h-4 rounded border-cream-300 text-maroon-700 focus:ring-maroon-700 cursor-pointer disabled:opacity-40"
                           />
                         </th>
                         <th scope="col" className="px-5 py-3.5">Order / Bag</th>
@@ -749,7 +749,7 @@ export default function StaffOrdersPage() {
                         <th scope="col" className="px-5 py-3.5 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-cream-200">
                       {activeOrders.map((order) => {
                         const isMismatch = order.countMismatchFlag;
                         const isProcessing = order.status === 'PROCESSING';
@@ -758,7 +758,7 @@ export default function StaffOrdersPage() {
                           <tr
                             key={order.id}
                             className={`transition-colors ${
-                              isSelected ? 'bg-blue-50/60 hover:bg-blue-50/90' : 'hover:bg-slate-50/80'
+                              isSelected ? 'bg-cream-100/80 hover:bg-cream-100' : 'hover:bg-cream-50/80'
                             }`}
                           >
                             <td className="px-4 py-4 text-center">
@@ -768,15 +768,15 @@ export default function StaffOrdersPage() {
                                 onChange={() => toggleOrderSelection(order.id, isProcessing)}
                                 disabled={!isProcessing}
                                 aria-label={`Select order ${order.orderCode}`}
-                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-30"
+                                className="w-4 h-4 rounded border-cream-300 text-maroon-700 focus:ring-maroon-700 cursor-pointer disabled:opacity-30"
                               />
                             </td>
                             <td className="px-5 py-4">
-                              <div className="font-mono font-bold text-blue-600 text-sm">
+                              <div className="font-mono font-bold text-maroon-700 text-sm">
                                 {order.orderCode}
                               </div>
                               <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-cream-100 text-slate-800 border border-cream-200">
                                   Bag #{order.bagNumber}
                                 </span>
                               </div>
@@ -834,7 +834,7 @@ export default function StaffOrdersPage() {
                                   </div>
                                   <button
                                     onClick={() => handleOpenEtaModal(order)}
-                                    className="text-[11px] text-blue-600 hover:text-blue-800 underline mt-0.5 cursor-pointer"
+                                    className="text-[11px] text-maroon-700 hover:text-maroon-800 underline mt-0.5 cursor-pointer"
                                   >
                                     Change ETA
                                   </button>
@@ -855,7 +855,7 @@ export default function StaffOrdersPage() {
                                 <button
                                   onClick={() => handleOpenEtaModal(order)}
                                   title="Set or update expected delivery date"
-                                  className="hidden sm:inline-flex items-center gap-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition cursor-pointer"
+                                  className="hidden sm:inline-flex items-center gap-1 bg-white hover:bg-cream-100 text-slate-700 border border-cream-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition cursor-pointer"
                                 >
                                   <Calendar className="w-3.5 h-3.5" />
                                   <span>ETA</span>
@@ -893,11 +893,11 @@ export default function StaffOrdersPage() {
 
       {/* MODAL 1: Accept Order & Verify Item Count */}
       {acceptModalOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="bg-maroon-900 text-white px-5 py-4 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-base">Accept Order &amp; Verify Count</h3>
+                <h3 className="font-serif font-bold text-base">Accept Order &amp; Verify Count</h3>
                 <p className="text-xs text-slate-400">
                   {acceptModalOrder.orderCode} • Bag #{acceptModalOrder.bagNumber}
                 </p>
@@ -911,7 +911,7 @@ export default function StaffOrdersPage() {
             </div>
 
             <form onSubmit={handleSubmitAccept} className="p-6 space-y-4">
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
+              <div className="p-3.5 bg-cream-50 rounded-xl border border-cream-200 text-xs space-y-1.5">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Student:</span>
                   <span className="font-medium text-slate-900">
@@ -920,7 +920,7 @@ export default function StaffOrdersPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Student Self-Reported Count:</span>
-                  <span className="font-bold text-blue-600 text-sm">
+                  <span className="font-bold text-maroon-700 text-sm">
                     {acceptModalOrder.selfReportedCount} items
                   </span>
                 </div>
@@ -937,7 +937,7 @@ export default function StaffOrdersPage() {
                   required
                   value={verifiedCountInput}
                   onChange={(e) => setVerifiedCountInput(e.target.value)}
-                  className="w-full text-base font-bold px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden text-slate-900 bg-white"
+                  className="w-full text-base font-bold px-3.5 py-2.5 border border-cream-300 rounded-xl focus:ring-2 focus:ring-maroon-700 focus:outline-hidden text-slate-900 bg-white"
                   placeholder="Count pieces in bag"
                   autoFocus
                 />
@@ -968,14 +968,14 @@ export default function StaffOrdersPage() {
                 <button
                   type="button"
                   onClick={() => setAcceptModalOrder(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-cream-100 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={acceptMutation.isPending}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-maroon-700 hover:bg-maroon-800 disabled:opacity-50 rounded-xl shadow-xs transition cursor-pointer"
                 >
                   {acceptMutation.isPending ? (
                     <>
@@ -997,11 +997,11 @@ export default function StaffOrdersPage() {
 
       {/* MODAL 2: Set ETA Date */}
       {etaModalOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="bg-maroon-900 text-white px-5 py-4 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-base">Set Estimated Ready Date</h3>
+                <h3 className="font-serif font-bold text-base">Set Estimated Ready Date</h3>
                 <p className="text-xs text-slate-400">
                   {etaModalOrder.orderCode} • Bag #{etaModalOrder.bagNumber}
                 </p>
@@ -1024,7 +1024,7 @@ export default function StaffOrdersPage() {
                   required
                   value={etaDateInput}
                   onChange={(e) => setEtaDateInput(e.target.value)}
-                  className="w-full text-sm font-semibold px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden text-slate-900 bg-white"
+                  className="w-full text-sm font-semibold px-3.5 py-2.5 border border-cream-300 rounded-xl focus:ring-2 focus:ring-maroon-700 focus:outline-hidden text-slate-900 bg-white"
                   autoFocus
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
@@ -1043,14 +1043,14 @@ export default function StaffOrdersPage() {
                 <button
                   type="button"
                   onClick={() => setEtaModalOrder(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-cream-100 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={etaMutation.isPending}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-maroon-700 hover:bg-maroon-800 disabled:opacity-50 rounded-xl shadow-xs transition cursor-pointer"
                 >
                   {etaMutation.isPending ? (
                     <>
@@ -1072,15 +1072,15 @@ export default function StaffOrdersPage() {
 
       {/* MODAL 3: Mark Ready OTP Generated Banner / Modal */}
       {readyOtpModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95">
             <div className="bg-emerald-600 text-white px-6 py-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">
                   <KeyRound className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base">Order Ready for Collection</h3>
+                  <h3 className="font-serif font-bold text-base">Order Ready for Collection</h3>
                   <p className="text-xs text-emerald-100">Collection OTP Generated</p>
                 </div>
               </div>
@@ -1093,7 +1093,7 @@ export default function StaffOrdersPage() {
             </div>
 
             <div className="p-6 text-center space-y-4">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600">
+              <div className="bg-cream-50 border border-cream-200 rounded-xl p-3 text-xs text-slate-600">
                 <p>
                   Order <span className="font-mono font-bold text-slate-900">{readyOtpModal.orderCode}</span> (Bag #{readyOtpModal.bagNumber}) is now marked ready.
                 </p>
@@ -1119,7 +1119,7 @@ export default function StaffOrdersPage() {
               <div className="pt-2">
                 <button
                   onClick={() => setReadyOtpModal(null)}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
+                  className="w-full py-2.5 bg-maroon-900 hover:bg-maroon-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Done / Dismiss
                 </button>
@@ -1131,15 +1131,15 @@ export default function StaffOrdersPage() {
 
       {/* MODAL 4: Bulk Mark Ready Summary Results */}
       {bulkReadyModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
-            <div className="bg-slate-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
+        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
+            <div className="bg-maroon-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center font-bold text-emerald-400">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base">Bulk Ready Update Summary</h3>
+                  <h3 className="font-serif font-bold text-base">Bulk Ready Update Summary</h3>
                   <p className="text-xs text-slate-400">
                     {bulkReadyModal.summary?.succeededCount || 0} succeeded,{' '}
                     {bulkReadyModal.summary?.failedCount || 0} failed
@@ -1210,10 +1210,10 @@ export default function StaffOrdersPage() {
               )}
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-200 shrink-0">
+            <div className="p-4 bg-cream-50 border-t border-cream-200 shrink-0">
               <button
                 onClick={() => setBulkReadyModal(null)}
-                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
+                className="w-full py-2.5 bg-maroon-900 hover:bg-maroon-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
               >
                 Close Summary
               </button>

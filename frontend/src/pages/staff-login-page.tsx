@@ -50,15 +50,15 @@ export default function StaffLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div className="min-h-screen bg-cream-50 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-cream-200">
         {/* Header */}
-        <div className="bg-slate-800 p-8 text-center text-white">
+        <div className="bg-maroon-900 p-8 text-center text-white">
           <div className="mx-auto bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <ShieldCheck className="w-8 h-8 text-emerald-400" />
+            <ShieldCheck className="w-8 h-8 text-cream-200" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Staff Portal Login</h1>
-          <p className="text-slate-300 mt-2 text-sm">
+          <h1 className="font-serif text-2xl font-bold tracking-tight">Staff Portal Login</h1>
+          <p className="text-cream-200/80 mt-2 text-sm">
             Rishihood University Laundry Staff & Admin Access
           </p>
         </div>
@@ -76,12 +76,12 @@ export default function StaffLoginPage() {
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-slate-700 mb-1"
+                className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Username
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                   <User className="w-4 h-4" />
                 </div>
                 <input
@@ -92,7 +92,7 @@ export default function StaffLoginPage() {
                   placeholder="e.g. admin_warden"
                   disabled={isLoading}
                   autoComplete="username"
-                  className="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all disabled:bg-slate-100"
+                  className="w-full pl-9 pr-3 py-2.5 border border-cream-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-maroon-700 focus:border-maroon-700 outline-none transition-all disabled:bg-cream-100"
                 />
               </div>
             </div>
@@ -100,12 +100,12 @@ export default function StaffLoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-700 mb-1"
+                className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -116,7 +116,7 @@ export default function StaffLoginPage() {
                   placeholder="••••••••"
                   disabled={isLoading}
                   autoComplete="current-password"
-                  className="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none transition-all disabled:bg-slate-100"
+                  className="w-full pl-9 pr-3 py-2.5 border border-cream-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-maroon-700 focus:border-maroon-700 outline-none transition-all disabled:bg-cream-100"
                 />
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function StaffLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 bg-slate-800 text-white font-semibold py-2.5 rounded-lg hover:bg-slate-900 transition-colors flex items-center justify-center disabled:bg-slate-400 cursor-pointer"
+              className="w-full mt-2 bg-maroon-700 text-white font-semibold py-2.5 rounded-lg hover:bg-maroon-800 transition-colors flex items-center justify-center disabled:opacity-50 cursor-pointer shadow-xs"
             >
               {isLoading ? (
                 <>
@@ -137,10 +137,10 @@ export default function StaffLoginPage() {
             </button>
           </form>
 
-          <div className="mt-8 pt-4 border-t border-slate-100 w-full text-center">
+          <div className="mt-8 pt-4 border-t border-cream-200 w-full text-center">
             <Link
               to="/"
-              className="text-xs text-slate-500 hover:text-slate-800 font-medium"
+              className="text-xs text-gray-500 hover:text-maroon-800 font-medium"
             >
               ← Back to Student Home
             </Link>

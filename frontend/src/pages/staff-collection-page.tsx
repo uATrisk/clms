@@ -199,28 +199,28 @@ export default function StaffCollectionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-cream-50 flex flex-col font-sans">
       {/* Staff Top Navigation */}
-      <header className="bg-slate-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
+      <header className="bg-maroon-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-bold tracking-tight">CLMS Collection Desk</h1>
+            <h1 className="font-serif text-sm sm:text-base font-bold tracking-tight">CLMS Collection Desk</h1>
             <p className="text-[11px] text-slate-400">Order Verification &amp; Handover</p>
           </div>
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="hidden md:flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+        <div className="hidden md:flex items-center gap-1.5 bg-maroon-800/80 p-1 rounded-xl border border-maroon-700/60">
           {staffUser?.role === 'ADMIN' && (
             <Link
               to="/admin/dashboard"
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
                 location.pathname === '/admin/dashboard'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                  ? 'bg-maroon-700 text-white shadow-xs'
+                  : 'text-slate-300 hover:text-white hover:bg-maroon-700/50'
               }`}
             >
               Admin Portal
@@ -230,8 +230,8 @@ export default function StaffCollectionPage() {
             to="/staff/orders"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               location.pathname === '/staff/orders'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-maroon-700 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-maroon-700/50'
             }`}
           >
             Washer Queue
@@ -240,8 +240,8 @@ export default function StaffCollectionPage() {
             to="/staff/collection"
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               location.pathname === '/staff/collection'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-maroon-700 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-maroon-700/50'
             }`}
           >
             Collection Desk
@@ -253,7 +253,7 @@ export default function StaffCollectionPage() {
             <p className="text-xs font-medium text-slate-200">
               {staffUser?.name || staffUser?.username}
             </p>
-            <span className="text-[10px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded uppercase font-semibold tracking-wider">
+            <span className="text-[10px] bg-maroon-800 text-emerald-400 px-2 py-0.5 rounded uppercase font-semibold tracking-wider">
               {staffUser?.role}
             </span>
           </div>
@@ -261,7 +261,7 @@ export default function StaffCollectionPage() {
           <button
             onClick={staffLogout}
             title="Sign Out"
-            className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-red-900/40 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-red-700 transition cursor-pointer"
+            className="flex items-center gap-1.5 text-xs bg-maroon-800 hover:bg-red-900/40 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded-lg border border-maroon-700 hover:border-red-700 transition cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Sign Out</span>
@@ -270,13 +270,13 @@ export default function StaffCollectionPage() {
       </header>
 
       {/* Mobile Sub-Navigation Bar */}
-      <div className="md:hidden bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-center gap-2">
+      <div className="md:hidden bg-maroon-800 border-b border-maroon-700 px-4 py-2 flex items-center justify-center gap-2">
         <Link
           to="/staff/orders"
           className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold transition ${
             location.pathname === '/staff/orders'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-300 hover:bg-slate-700'
+              ? 'bg-maroon-700 text-white shadow-xs'
+              : 'text-slate-300 hover:bg-maroon-700'
           }`}
         >
           Washer Queue
@@ -285,8 +285,8 @@ export default function StaffCollectionPage() {
           to="/staff/collection"
           className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold transition ${
             location.pathname === '/staff/collection'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-300 hover:bg-slate-700'
+              ? 'bg-maroon-700 text-white shadow-xs'
+              : 'text-slate-300 hover:bg-maroon-700'
           }`}
         >
           Collection Desk
@@ -325,9 +325,9 @@ export default function StaffCollectionPage() {
         )}
 
         {/* Search Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 mb-6">
+        <div className="bg-white rounded-2xl border border-cream-200 shadow-xs p-5 sm:p-6 mb-6">
           <div className="mb-4">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900">
               Lookup Ready Orders
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -343,13 +343,13 @@ export default function StaffCollectionPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="e.g. BAG-102, 2024RU101, 9876543210, LN-ABCD-1234"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-slate-900 transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 text-slate-900 transition"
               />
             </div>
             <button
               type="submit"
               disabled={isSearching}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-xs shadow-emerald-700/10"
+              className="px-6 py-2.5 bg-maroon-700 hover:bg-maroon-800 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-xs shadow-maroon-700/10"
             >
               {isSearching ? (
                 <>
@@ -376,11 +376,11 @@ export default function StaffCollectionPage() {
         {/* Results Section */}
         <div className="flex-1">
           {!hasSearched ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center">
+            <div className="bg-white rounded-2xl border border-cream-200 p-8 sm:p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center">
               <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
                 <ShoppingBag className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-semibold text-slate-800">
+              <h3 className="font-serif text-base font-semibold text-slate-800">
                 Ready to Process Collections
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 max-w-md mt-1">
@@ -388,11 +388,11 @@ export default function StaffCollectionPage() {
               </p>
             </div>
           ) : searchResults.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+            <div className="bg-white rounded-2xl border border-cream-200 p-8 sm:p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-cream-100 text-slate-400 flex items-center justify-center mb-3">
                 <Search className="w-6 h-6" />
               </div>
-              <h3 className="text-sm sm:text-base font-semibold text-slate-700">
+              <h3 className="font-serif text-sm sm:text-base font-semibold text-slate-700">
                 No Ready Orders Found
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 max-w-md mt-1">
@@ -411,7 +411,7 @@ export default function StaffCollectionPage() {
                 {searchResults.map((order) => (
                   <div
                     key={order.id}
-                    className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:border-emerald-300 transition p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="bg-white rounded-2xl border border-cream-200 shadow-xs hover:border-emerald-300 transition p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
@@ -421,7 +421,7 @@ export default function StaffCollectionPage() {
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800">
                           READY FOR PICKUP
                         </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-cream-100 text-slate-700 border border-cream-200">
                           <Hash className="w-3 h-3 text-slate-500" />
                           Bag #{order.bagNumber}
                         </span>
@@ -449,10 +449,10 @@ export default function StaffCollectionPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                    <div className="flex items-center sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-cream-100">
                       <button
                         onClick={() => handleOpenCollectModal(order)}
-                        className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs shadow-emerald-700/10"
+                        className="w-full sm:w-auto px-5 py-2.5 bg-maroon-700 hover:bg-maroon-800 text-white text-xs sm:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs shadow-maroon-700/10"
                       >
                         <PackageCheck className="w-4 h-4" />
                         <span>Collect</span>
@@ -468,15 +468,15 @@ export default function StaffCollectionPage() {
 
       {/* Collect / Handover Verification Modal */}
       {collectModalOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-maroon-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-cream-200 flex flex-col gap-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-cream-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
                   <PackageCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                  <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
                     Handover Verification
                   </h3>
                   <p className="text-[11px] text-slate-500 font-mono">
@@ -487,14 +487,14 @@ export default function StaffCollectionPage() {
               <button
                 onClick={handleCloseCollectModal}
                 disabled={isSubmittingCollect}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-cream-100 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSubmitCollect} className="space-y-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+              <div className="p-3 bg-cream-50 rounded-xl border border-cream-200 text-xs text-slate-600 space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Student:</span>
                   <span className="font-semibold text-slate-800">
@@ -547,7 +547,7 @@ export default function StaffCollectionPage() {
                     placeholder="Enter 4-digit OTP"
                     autoFocus
                     required
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center font-mono text-lg tracking-widest font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                    className="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-center font-mono text-lg tracking-widest font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 transition"
                   />
                   <p className="text-[11px] text-slate-400 mt-1 text-center">
                     Ask student for the 4-digit code shown on their tracking page.
@@ -596,7 +596,7 @@ export default function StaffCollectionPage() {
                   onChange={(e) => setReturnedCountInput(e.target.value)}
                   placeholder="e.g. 5"
                   required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                  className="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 transition"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">
                   Physically verify the number of items being handed back to the student.
@@ -608,7 +608,7 @@ export default function StaffCollectionPage() {
                   type="button"
                   onClick={handleCloseCollectModal}
                   disabled={isSubmittingCollect}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-cream-100 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -618,7 +618,7 @@ export default function StaffCollectionPage() {
                   className={`px-5 py-2 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
                     isAdminOverride
                       ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-700/10'
-                      : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-700/10'
+                      : 'bg-maroon-700 hover:bg-maroon-800 shadow-maroon-700/10'
                   }`}
                 >
                   {isSubmittingCollect ? (

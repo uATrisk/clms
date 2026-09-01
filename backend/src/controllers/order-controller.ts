@@ -54,6 +54,29 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
       throw error;
     }
 
+    // Check if the student already has an active order (status NOT IN COLLECTED, CANCELLED)
+    const existingActiveOrder = await prisma.order.findFirst({
+      where: {
+        studentId: student.id,
+        status: {
+          notIn: [OrderStatus.COLLECTED, OrderStatus.CANCELLED]
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    if (existingActiveOrder) {
+      const error = new Error(
+        `You already have an active laundry request (Order #${existingActiveOrder.orderCode}, status: ${existingActiveOrder.status}). Please wait until it's collected before submitting a new one.`
+      ) as AppError;
+      error.status = 409;
+      error.errors = {
+        orderCode: existingActiveOrder.orderCode,
+        status: existingActiveOrder.status
+      };
+      throw error;
+    }
+
     // Generate unique order code
     let orderCode = generateOrderCode();
     let isCodeUnique = false;
@@ -266,4 +289,98 @@ export const raiseComplaint = async (req: Request, res: Response, next: NextFunc
     next(error);
   }
 };
+
+export const getMyActiveOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const studentId = authReq.user?.id;
+
+    if (!studentId) {
+      const error = new Error('Unauthorized') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const activeOrder = await prisma.order.findFirst({
+      where: {
+        studentId,
+        status: {
+          notIn: [OrderStatus.COLLECTED, OrderStatus.CANCELLED]
+        }
+      },
+      orderBy: { submittedAt: 'desc' },
+      include: {
+        student: {
+          select: {
+            name: true,
+            bagNumber: true,
+            collegeId: true,
+            mobileNumber: true
+          }
+        },
+        statusHistory: {
+          orderBy: { changedAt: 'asc' },
+          select: {
+            fromStatus: true,
+            toStatus: true,
+            changedAt: true,
+            note: true
+          }
+        },
+        complaints: {
+          select: {
+            id: true,
+            category: true,
+            description: true,
+            status: true,
+            raisedAt: true,
+            resolvedAt: true,
+            resolutionNote: true
+          }
+        }
+      }
+    });
+
+    if (!activeOrder) {
+      const error = new Error('No active order found') as AppError;
+      error.status = 404;
+      throw error;
+    }
+
+    const phone = activeOrder.student.mobileNumber || '';
+    const maskedMobile = phone.length > 4
+      ? phone.slice(0, 3) + '*'.repeat(phone.length - 7 > 0 ? phone.length - 7 : 3) + phone.slice(-4)
+      : phone;
+
+    res.status(200).json({
+      order: {
+        id: activeOrder.id,
+        orderCode: activeOrder.orderCode,
+        bagNumber: activeOrder.bagNumber,
+        status: activeOrder.status,
+        selfReportedCount: activeOrder.selfReportedCount,
+        verifiedCount: activeOrder.verifiedCount,
+        returnedCount: activeOrder.returnedCount,
+        countMismatchFlag: activeOrder.countMismatchFlag,
+        submittedAt: activeOrder.submittedAt,
+        acceptedAt: activeOrder.acceptedAt,
+        expectedReadyAt: activeOrder.expectedReadyAt,
+        actualReadyAt: activeOrder.actualReadyAt,
+        collectedAt: activeOrder.collectedAt,
+        collectionOtp: activeOrder.status === 'READY' ? activeOrder.collectionOtpPlain : undefined,
+        student: {
+          name: activeOrder.student.name,
+          bagNumber: activeOrder.student.bagNumber,
+          collegeId: activeOrder.student.collegeId,
+          maskedMobile
+        },
+        timeline: activeOrder.statusHistory,
+        complaints: activeOrder.complaints
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 

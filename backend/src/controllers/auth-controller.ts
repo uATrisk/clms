@@ -137,6 +137,8 @@ export const googleAuth = async (req: Request, res: Response, next: NextFunction
         name: student.name,
         email: student.email,
         bagNumber: student.bagNumber,
+        mobileNumber: student.mobileNumber,
+        collegeId: student.collegeId,
         role: 'STUDENT'
       }
     });

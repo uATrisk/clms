@@ -31,7 +31,11 @@ export default function LoginPage() {
 
       const { token, user } = response.data;
       login(token, user);
-      navigate(from, { replace: true });
+      if (!user.bagNumber || !user.mobileNumber) {
+        navigate('/profile', { state: { from: { pathname: from } }, replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err: any) {
       console.error('Login error:', err);
       const message =

@@ -4,7 +4,9 @@ type User = {
   id: string;
   name: string;
   email: string;
-  bagNumber: string;
+  bagNumber?: string;
+  mobileNumber?: string;
+  collegeId?: string;
   role: string;
 };
 

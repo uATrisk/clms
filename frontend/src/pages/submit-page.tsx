@@ -3,15 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, ShoppingBag } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/auth-context';
 
-// Validation schema (name removed, it comes from auth)
 const submitSchema = z.object({
-  collegeId: z.string().optional(),
-  bagNumber: z.string().min(1, 'Bag number is required'),
-  mobileNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Enter a valid mobile number (e.g. 9876543210)'),
   selfReportedCount: z.coerce
     .number()
     .int('Item count must be an integer')
@@ -33,9 +29,6 @@ export default function SubmitPage() {
   } = useForm<SubmitFormInput, unknown, SubmitFormOutput>({
     resolver: zodResolver(submitSchema),
     defaultValues: {
-      collegeId: '',
-      bagNumber: user?.bagNumber && !user.bagNumber.startsWith('BAG-') ? user.bagNumber : '', // Don't autofill if it's the random placeholder
-      mobileNumber: '',
       selfReportedCount: '' as unknown as number
     }
   });
@@ -43,10 +36,9 @@ export default function SubmitPage() {
   const onSubmit = async (data: SubmitFormOutput) => {
     setServerError(null);
     try {
-      // Connect to backend api
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/orders`,
-        data,
+        { selfReportedCount: data.selfReportedCount },
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -55,158 +47,120 @@ export default function SubmitPage() {
       );
       const { order } = response.data;
 
-      // On success, redirect to the track result page
       if (order && order.orderCode) {
         navigate(`/track/${order.orderCode}`);
       }
     } catch (error: any) {
-      const message = error.response?.data?.error?.message
-        || error.response?.data?.message
-        || error.message
-        || 'An unexpected error occurred. Please try again.';
+      const message =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        error.message ||
+        'An unexpected error occurred. Please try again.';
       setServerError(message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 sm:px-6">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+    <div className="bg-gray-50 flex flex-col font-sans flex-1">
+      <div className="flex-1 flex flex-col items-center py-8 px-4 sm:px-6">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+          {/* Header */}
+          <div className="flex items-center text-blue-600 mb-2">
+            <Link to="/" className="flex items-center hover:underline focus:outline-none focus:underline">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              <span className="text-sm font-medium">Back to Home</span>
+            </Link>
+          </div>
 
-        {/* Header */}
-        <div className="flex items-center text-blue-600 mb-2">
-          <Link to="/" className="flex items-center hover:underline focus:outline-none focus:underline">
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            <span className="text-sm font-medium">Back</span>
-          </Link>
-        </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Drop off Laundry</h1>
+            <p className="text-gray-500 mt-1 text-sm leading-relaxed">
+              Submit a new laundry request for Bag <span className="font-semibold text-gray-800">{user?.bagNumber}</span>.
+            </p>
+          </div>
 
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Drop off Laundry</h1>
-          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-            Submit a new laundry request. Verified under {user?.email}.
-          </p>
-        </div>
-
-        {/* Global Error Banner */}
-        {serverError && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-            <div className="flex">
-              <div className="flex-1">
-                <p className="text-sm text-red-700 font-medium">{serverError}</p>
+          {/* Profile Quick Summary Card */}
+          <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3.5 flex items-center justify-between text-xs text-blue-900">
+            <div className="flex items-center gap-2.5">
+              <div className="bg-blue-600 text-white p-1.5 rounded-lg">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="font-semibold">Bag #{user?.bagNumber}</p>
+                <p className="text-blue-700/80">{user?.email}</p>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {/* Bag Number */}
-            <div>
-              <label htmlFor="bagNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                Bag Number
-              </label>
-              <input
-                id="bagNumber"
-                {...register('bagNumber')}
-                placeholder="e.g. 102A"
-                disabled={isSubmitting}
-                className={`w-full p-2.5 border rounded-lg outline-none transition-all uppercase focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
-                  errors.bagNumber ? 'border-red-300 focus:ring-red-500 text-red-900' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                }`}
-              />
-              {errors.bagNumber && (
-                <p className="mt-1 text-sm text-red-600">{errors.bagNumber.message}</p>
-              )}
-            </div>
-
-            {/* College ID (Optional) */}
-            <div>
-              <label htmlFor="collegeId" className="block text-sm font-medium text-gray-700 mb-1">
-                College ID <span className="text-gray-400 font-normal">(Optional)</span>
-              </label>
-              <input
-                id="collegeId"
-                {...register('collegeId')}
-                placeholder="e.g. CS-2026"
-                disabled={isSubmitting}
-                className={`w-full p-2.5 border rounded-lg outline-none transition-all uppercase focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
-                  errors.collegeId ? 'border-red-300 focus:ring-red-500 text-red-900' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                }`}
-              />
-              {errors.collegeId && (
-                <p className="mt-1 text-sm text-red-600">{errors.collegeId.message}</p>
-              )}
-            </div>
+            <Link
+              to="/profile"
+              state={{ from: { pathname: '/submit' } }}
+              className="text-blue-600 font-semibold hover:underline"
+            >
+              Change
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {/* Mobile Number */}
-            <div>
-              <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                Mobile Number
-              </label>
-              <input
-                id="mobileNumber"
-                type="tel"
-                {...register('mobileNumber')}
-                placeholder="+91..."
-                disabled={isSubmitting}
-                className={`w-full p-2.5 border rounded-lg outline-none transition-all focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
-                  errors.mobileNumber ? 'border-red-300 focus:ring-red-500 text-red-900' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                }`}
-              />
-              {errors.mobileNumber && (
-                <p className="mt-1 text-sm text-red-600">{errors.mobileNumber.message}</p>
-              )}
+          {/* Global Error Banner */}
+          {serverError && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+              <div className="flex">
+                <div className="flex-1">
+                  <p className="text-sm text-red-700 font-medium">{serverError}</p>
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* Self Reported Count */}
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label htmlFor="selfReportedCount" className="block text-sm font-medium text-gray-700 mb-1">
-                Total Items
+                Number of items <span className="text-red-500">*</span>
               </label>
               <input
                 id="selfReportedCount"
                 type="number"
                 min="1"
                 {...register('selfReportedCount')}
-                placeholder="e.g. 15"
+                placeholder="e.g. 12"
                 disabled={isSubmitting}
-                className={`w-full p-2.5 border rounded-lg outline-none transition-all focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
-                  errors.selfReportedCount ? 'border-red-300 focus:ring-red-500 text-red-900' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                className={`w-full p-3 border rounded-xl outline-none transition-all text-lg font-medium focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
+                  errors.selfReportedCount
+                    ? 'border-red-300 focus:ring-red-500 text-red-900'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 }`}
               />
               {errors.selfReportedCount && (
                 <p className="mt-1 text-sm text-red-600">{errors.selfReportedCount.message}</p>
               )}
+              <p className="text-xs text-gray-400 mt-1">
+                Count all garments being dropped off in this bag.
+              </p>
             </div>
-          </div>
 
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 flex items-center justify-center transition-colors"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Submitting Request...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-5 h-5 mr-2" />
-                  Submit Laundry
-                </>
-              )}
-            </button>
-            <p className="text-xs text-center text-gray-500 mt-4">
-              By submitting, you confirm the provided counts are accurate.
-            </p>
-          </div>
-        </form>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-600 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 disabled:bg-blue-400 flex items-center justify-center transition-all cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Submitting Request...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                    Submit Laundry
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-center text-gray-400 mt-3">
+                By submitting, you confirm the item count is accurate.
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

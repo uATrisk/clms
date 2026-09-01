@@ -249,3 +249,45 @@ We moved `bagNumber`, `mobileNumber`, and `collegeId` to the `Student` profile r
 ### Status
 Accepted
 
+---
+
+## [2026-08-31] ADR 013: Frontend Profile Completeness Barrier & UX Overhaul
+
+### Context
+Following ADR 012, the backend order submission endpoint now demands robust pre-existing student profiles and stripped out per-order collection of `bagNumber` and `mobileNumber`. The frontend UI must adapt to gracefully navigate new students through this profile completion requirement before they are permitted to execute any core lifecycle tasks (submitting or tracking).
+
+### Decision
+1. **Introduction of the `/profile` Guard:** We implemented a global profile completeness guard within the `ProtectedRoute` component. When a student signs in, or attempts to access `/submit` or `/track` without a saved `bagNumber` or `mobileNumber` in the `auth-context`, they are transparently routed to a new `/profile` page.
+2. **Simplified Drop-Off (`/submit`):** Form schema fields for identity (`bagNumber`, `collegeId`, `mobileNumber`) were entirely ripped out of `submit-page.tsx`. The interface now boasts a streamlined "Number of items" input, with a read-only contextual summary card dynamically loading the student's email and bound Bag Number.
+3. **Editable Identity Strategy:** We integrated a profile "Settings" link directly into the primary application `Header`, enabling authenticated students to retroactively fix or update their `bagNumber` (e.g., if a bag splits or gets permanently re-issued) natively inside the existing web application without needing a staff override.
+4. **State Navigation Interception:** We enriched React Router's strictly declarative `<Navigate />` usage, passing deep links (`location.pathname`) alongside the authorization redirects to perfectly preserve flow intent post-setup. (e.g., trying to submit → gets sent to complete profile → completes form → automatically forwards straight to submit page).
+
+### Rationale
+- **Zero-Friction Re-Engagement:** Return-student drop-off speed is now near instantaneous (entering a single count integer).
+- **Graceful Onboarding:** We transformed a hard backend barrier (400 Bad Request if missing fields) into an invisible, self-correcting routing loop that immediately satisfies the backend condition with zero opaque error screens.
+### Status
+Accepted
+
+**Addendum (2026-09-01)**: Fixed a bug where `POST /api/auth/google` omitted `mobileNumber` and `collegeId` in its response, causing the frontend context to overwrite a cached completed profile with a partial one upon sign-in. Both `auth-controller.ts` and the frontend `auth-context.tsx` (User type) were updated to handle the complete profile shape (including `collegeId`), fixing potential redirection loops on `/profile`.
+
+---
+
+## [2026-09-01] ADR 014: Single Active Order Enforcement per Student
+
+### Context
+In the physical operational model of the campus laundry facility, each student is issued a single physical laundry bag bearing a unique bag number. A student cannot physically submit a second bag of laundry while their current bag is in circulation (i.e. being washed, dried, pressed, awaiting pickup, or undergoing complaint review). Allowing multiple concurrent active orders for the same student creates data desynchronization, confusing OTP states, and race conditions at the collection counter.
+
+### Decision
+We enforce a strict single-active-order rule on the backend:
+1. **Active Order Definition:** Any order where `status NOT IN ('COLLECTED', 'CANCELLED')` is classified as active (including `SUBMITTED`, `ACCEPTED`, `PROCESSING`, `DELAYED`, `READY`, `COMPLAINT_RAISED`, `UNDER_REVIEW`, `RESOLVED`).
+2. **Current Order Endpoint (`GET /api/orders/my-active`):** A dedicated endpoint protected with `authenticate` and `authorize(['STUDENT'])` that retrieves the authenticated student's active order, complete with full lifecycle timeline, complaints, and OTP (if `READY`), mirroring the `trackOrder` response structure. If no active order exists, it returns `{ order: null }`.
+3. **Submission Conflict Guard (`POST /api/orders`):** Before creating a new order, the backend checks for an existing active order for `req.user.id`. If found, the request is rejected with `409 Conflict` and an explicit error payload specifying the existing `orderCode` and `status`.
+
+### Rationale
+- **Physical Reality Mirroring:** Enforcing one active order directly reflects campus operations where one student possesses one physical bag.
+- **Atomic State Clarity:** Guarantees that student dashboards, tracking views, and OTP lookups remain unambiguous without complex multi-order tab navigation.
+
+### Status
+Accepted
+
+

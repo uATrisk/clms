@@ -45,10 +45,14 @@
   - [x] Expose `POST /api/auth/google` for ID token verification & domain checks
   - [x] Backfill/Migrate existing test student definitions safely
   - [x] Implement Profile Completeness Support (`GET/PATCH /api/students/me` & simplified `POST /api/orders`)
+  - [x] Enforce Single Active Order per Student (`GET /api/orders/my-active` & `409 Conflict` on `POST /api/orders`)
 - [x] **Frontend Identity Provider**
   - [x] Implement `GoogleOAuthProvider` and frontend sign-in page (`/login`)
   - [x] Intercept `/submit` and `/track` flows with Google Auth guard (`ProtectedRoute`)
   - [x] Modify API dispatch layer to attach student JWT to requests
+  - [x] Implement `/profile` management page and completeness redirection guard
+  - [x] Simplify `/submit` page to single-field `selfReportedCount` submission with contextual identity preview
+  - [x] Add header profile settings link for persistent identity updates
 
 ---
 

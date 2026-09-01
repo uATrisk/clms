@@ -13,6 +13,7 @@ import LandingPage from './pages/landing-page';
 import TrackPage from './pages/track-page';
 import TrackDetailsPage from './pages/track-details-page';
 import SubmitPage from './pages/submit-page';
+import ProfilePage from './pages/profile-page';
 import LoginPage from './pages/login-page';
 import StaffLoginPage from './pages/staff-login-page';
 import StaffOrdersPage from './pages/staff-orders-page';
@@ -54,6 +55,14 @@ function MainContent() {
             element={
               <ProtectedRoute>
                 <SubmitPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

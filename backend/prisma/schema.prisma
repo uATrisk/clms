@@ -124,6 +124,7 @@ model Staff {
   assignedOrders   Order[]      @relation("AssignedWasher")
   statusChanges    StatusHistory[] @relation("StatusChanger")
   handledComplaints Complaint[] @relation("ComplaintResolver")
+  announcements    Announcement[] @relation("AnnouncementAuthor")
 
   @@map("staff")
 }
@@ -176,4 +177,18 @@ model NotificationLog {
   order            Order               @relation(fields: [orderId], references: [id])
 
   @@map("notifications_log")
+}
+
+model Announcement {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  body        String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById String?  @map("created_by") @db.Uuid
+  isActive    Boolean  @default(true) @map("is_active")
+
+  // Relations
+  createdBy   Staff?   @relation("AnnouncementAuthor", fields: [createdById], references: [id])
+
+  @@map("announcements")
 }

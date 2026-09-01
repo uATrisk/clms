@@ -311,4 +311,24 @@ With single active order enforcement on the backend (ADR 014), the student track
 ### Status
 Accepted
 
+---
+
+## [2026-09-01] ADR 016: Announcements Database Model
+
+### Context
+We are implementing an admin-to-student announcements feature. Before building the API and frontend, we introduced a structured database model to safely store and manage broad broadcasts intended for students (e.g. holiday closures, delays, process changes).
+
+### Decision
+We added the `Announcement` model to the Prisma schema (`backend/prisma/schema.prisma`):
+1. **Schema Def:** Utilizes the standard PostgreSQL `uuid` id generation (`gen_random_uuid`) and standard timestamp mapping (`created_at`).
+2. **Title & Body:** Represents the core message (`title` and extensive `body` as `@db.Text`).
+3. **Archivability / Soft Deletions:** Includes an `is_active` (`Boolean`, default `true`) flag allowing admin staff to hide/archive outdated announcements without permanently destroying the log.
+4. **Attribution:** Implements an optional `created_by` relationship back to the `Staff` user tracking which admin originally posted the bulletin.
+
+### Rationale
+Adding an `is_active` boolean ensures the ability to softly "archive" items without creating orphan data or entirely deleting historical records, preserving institutional knowledge. The connection back to `Staff` guarantees accountability (audit trail) for official messaging.
+
+### Status
+Accepted
+
 

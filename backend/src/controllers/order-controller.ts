@@ -383,4 +383,131 @@ export const getMyActiveOrder = async (req: Request, res: Response, next: NextFu
   }
 };
 
+const getOrderHistorySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 10)),
+});
+
+export const getMyOrderHistory = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const studentId = authReq.user?.id;
+
+    if (!studentId) {
+      const error = new Error('Unauthorized') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const parsed = getOrderHistorySchema.safeParse(req.query);
+    if (!parsed.success) {
+      const error = new Error('Validation Error') as AppError;
+      error.status = 400;
+      error.errors = parsed.error.format();
+      throw error;
+    }
+
+    const { page, limit } = parsed.data;
+    const skip = (page - 1) * limit;
+
+    const whereClause = {
+      studentId,
+      status: {
+        in: [OrderStatus.COLLECTED, OrderStatus.CANCELLED]
+      }
+    };
+
+    const [orders, totalCount] = await Promise.all([
+      prisma.order.findMany({
+        where: whereClause,
+        orderBy: { submittedAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          student: {
+            select: {
+              name: true,
+              bagNumber: true,
+              collegeId: true,
+              mobileNumber: true
+            }
+          },
+          statusHistory: {
+            orderBy: { changedAt: 'asc' },
+            select: {
+              fromStatus: true,
+              toStatus: true,
+              changedAt: true,
+              note: true
+            }
+          },
+          complaints: {
+            select: {
+              id: true,
+              category: true,
+              description: true,
+              status: true,
+              raisedAt: true,
+              resolvedAt: true,
+              resolutionNote: true
+            }
+          }
+        }
+      }),
+      prisma.order.count({ where: whereClause })
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const formattedOrders = orders.map((order) => {
+      const phone = order.student.mobileNumber || '';
+      const maskedMobile = phone.length > 4
+        ? phone.slice(0, 3) + '*'.repeat(phone.length - 7 > 0 ? phone.length - 7 : 3) + phone.slice(-4)
+        : phone;
+
+      return {
+        id: order.id,
+        orderCode: order.orderCode,
+        bagNumber: order.bagNumber,
+        status: order.status,
+        selfReportedCount: order.selfReportedCount,
+        verifiedCount: order.verifiedCount,
+        returnedCount: order.returnedCount,
+        countMismatchFlag: order.countMismatchFlag,
+        submittedAt: order.submittedAt,
+        acceptedAt: order.acceptedAt,
+        expectedReadyAt: order.expectedReadyAt,
+        actualReadyAt: order.actualReadyAt,
+        collectedAt: order.collectedAt,
+        student: {
+          name: order.student.name,
+          bagNumber: order.student.bagNumber,
+          collegeId: order.student.collegeId,
+          maskedMobile
+        },
+        timeline: order.statusHistory,
+        complaints: order.complaints
+      };
+    });
+
+    res.status(200).json({
+      orders: formattedOrders,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 

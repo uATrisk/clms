@@ -46,6 +46,7 @@
   - [x] Backfill/Migrate existing test student definitions safely
   - [x] Implement Profile Completeness Support (`GET/PATCH /api/students/me` & simplified `POST /api/orders`)
   - [x] Enforce Single Active Order per Student (`GET /api/orders/my-active` & `409 Conflict` on `POST /api/orders`)
+  - [x] Implement Student Order History API (`GET /api/orders/history`) with pagination & past order status filtering
 - [x] **Frontend Identity Provider & Active Order Tracking**
   - [x] Implement `GoogleOAuthProvider` and frontend sign-in page (`/login`)
   - [x] Intercept `/submit` and `/track` flows with Google Auth guard (`ProtectedRoute`)

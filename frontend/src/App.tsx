@@ -16,6 +16,7 @@ import TrackSearchPage from './pages/track-search-page';
 import TrackDetailsPage from './pages/track-details-page';
 import SubmitPage from './pages/submit-page';
 import ProfilePage from './pages/profile-page';
+import HistoryPage from './pages/history-page';
 import LoginPage from './pages/login-page';
 import StaffLoginPage from './pages/staff-login-page';
 import StaffOrdersPage from './pages/staff-orders-page';
@@ -87,6 +88,14 @@ function MainContent() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <HistoryPage />
               </ProtectedRoute>
             }
           />

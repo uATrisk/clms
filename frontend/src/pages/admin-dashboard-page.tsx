@@ -26,6 +26,7 @@ import {
   MessageSquare,
   CheckSquare,
   ArrowUpRight,
+  Megaphone,
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -136,12 +137,37 @@ interface AnalyticsSummary {
   };
 }
 
+interface AdminAnnouncementItem {
+  id: string;
+  title: string;
+  body: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdById: string;
+  createdBy?: {
+    id: string;
+    name: string;
+    role: string;
+  } | null;
+}
+
+interface AdminAnnouncementsResponse {
+  announcements: AdminAnnouncementItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
 export default function AdminDashboardPage() {
   const { staffToken, staffUser, staffLogout } = useStaffAuth();
   const queryClient = useQueryClient();
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'staff' | 'orders' | 'complaints' | 'analytics'>('staff');
+  const [activeTab, setActiveTab] = useState<'staff' | 'orders' | 'complaints' | 'analytics' | 'announcements'>('staff');
 
   // Staff creation modal state
   const [isCreateStaffOpen, setIsCreateStaffOpen] = useState(false);
@@ -171,6 +197,14 @@ export default function AdminDashboardPage() {
   const [activeComplaintForResolve, setActiveComplaintForResolve] = useState<ComplaintItem | null>(null);
   const [resolutionNoteText, setResolutionNoteText] = useState('');
   const [resolveModalError, setResolveModalError] = useState<string | null>(null);
+
+  // Announcements Tab pagination & modal state
+  const [announcementPage, setAnnouncementPage] = useState<number>(1);
+  const announcementLimit = 10;
+  const [isCreateAnnouncementOpen, setIsCreateAnnouncementOpen] = useState(false);
+  const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
+  const [newAnnouncementBody, setNewAnnouncementBody] = useState('');
+  const [createAnnouncementError, setCreateAnnouncementError] = useState<string | null>(null);
 
   // 1. Fetch Staff List Query
   const staffQuery = useQuery<StaffMember[]>({
@@ -235,6 +269,21 @@ export default function AdminDashboardPage() {
     },
     enabled: !!staffToken && activeTab === 'analytics',
     staleTime: 1000 * 60 * 5,
+  });
+
+  // 5. Fetch Announcements Query
+  const announcementsQuery = useQuery<AdminAnnouncementsResponse>({
+    queryKey: ['admin-announcements', announcementPage, announcementLimit],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${API_BASE_URL}/admin/announcements?page=${announcementPage}&limit=${announcementLimit}`,
+        {
+          headers: { Authorization: `Bearer ${staffToken}` },
+        }
+      );
+      return response.data;
+    },
+    enabled: !!staffToken && activeTab === 'announcements',
   });
 
   // 5. Create Staff Mutation
@@ -358,6 +407,91 @@ export default function AdminDashboardPage() {
       }
     },
   });
+
+  // 8. Create Announcement Mutation
+  const createAnnouncementMutation = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(
+        `${API_BASE_URL}/admin/announcements`,
+        {
+          title: newAnnouncementTitle.trim(),
+          body: newAnnouncementBody.trim(),
+        },
+        {
+          headers: { Authorization: `Bearer ${staffToken}` },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-announcements'] });
+      setIsCreateAnnouncementOpen(false);
+      setNewAnnouncementTitle('');
+      setNewAnnouncementBody('');
+      setCreateAnnouncementError(null);
+      setNotification({
+        type: 'success',
+        message: 'Announcement posted successfully.',
+      });
+    },
+    onError: (err: any) => {
+      const message =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        err.response?.data?.errors?.fieldErrors?.title?.[0] ||
+        err.response?.data?.errors?.fieldErrors?.body?.[0] ||
+        'Failed to post announcement.';
+      setCreateAnnouncementError(message);
+    },
+  });
+
+  // 9. Toggle Announcement Status Mutation
+  const toggleAnnouncementStatusMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const response = await axios.patch(
+        `${API_BASE_URL}/admin/announcements/${id}`,
+        { isActive },
+        {
+          headers: { Authorization: `Bearer ${staffToken}` },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-announcements'] });
+      setNotification({
+        type: 'success',
+        message: `Announcement ${variables.isActive ? 'activated' : 'archived'} successfully.`,
+      });
+    },
+    onError: (err: any) => {
+      const message =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        'Could not update announcement status.';
+      setNotification({
+        type: 'error',
+        message,
+      });
+    },
+  });
+
+  const handleCreateAnnouncementSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAnnouncementTitle.trim() || !newAnnouncementBody.trim()) {
+      setCreateAnnouncementError('Title and body are both required.');
+      return;
+    }
+    setCreateAnnouncementError(null);
+    createAnnouncementMutation.mutate();
+  };
+
+  const handleToggleAnnouncementStatus = (announcement: AdminAnnouncementItem) => {
+    toggleAnnouncementStatusMutation.mutate({
+      id: announcement.id,
+      isActive: !announcement.isActive,
+    });
+  };
 
   const handleCreateStaffSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -675,6 +809,17 @@ export default function AdminDashboardPage() {
               <BarChart3 className="w-4 h-4" />
               Analytics &amp; Metrics
             </button>
+            <button
+              onClick={() => setActiveTab('announcements')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                activeTab === 'announcements'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <Megaphone className="w-4 h-4" />
+              Announcements
+            </button>
           </div>
 
           {activeTab === 'staff' && (
@@ -731,6 +876,28 @@ export default function AdminDashboardPage() {
                 title="Refresh analytics"
               >
                 <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {activeTab === 'announcements' && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-announcements'] })}
+                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                title="Refresh announcements list"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setCreateAnnouncementError(null);
+                  setIsCreateAnnouncementOpen(true);
+                }}
+                className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Post Announcement</span>
               </button>
             </div>
           )}
@@ -1487,7 +1654,203 @@ export default function AdminDashboardPage() {
             ) : null}
           </div>
         )}
+
+        {/* TAB 5: ANNOUNCEMENTS */}
+        {activeTab === 'announcements' && (
+          <div className="space-y-4">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-slate-800">Campus Announcements</h2>
+                  <p className="text-xs text-slate-500">
+                    Broadcast operational updates, notices, and schedule alerts to students.
+                  </p>
+                </div>
+                <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                  {announcementsQuery.data?.pagination.totalCount || 0} Total Announcements
+                </div>
+              </div>
+
+              {announcementsQuery.isLoading ? (
+                <div className="p-12 text-center text-slate-400">Loading announcements...</div>
+              ) : announcementsQuery.data?.announcements.length === 0 ? (
+                <div className="p-12 text-center text-slate-400">No announcements found.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-600">
+                    <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                      <tr>
+                        <th className="py-3.5 px-4">Title &amp; Content</th>
+                        <th className="py-3.5 px-4">Author</th>
+                        <th className="py-3.5 px-4">Posted Date</th>
+                        <th className="py-3.5 px-4">Status</th>
+                        <th className="py-3.5 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {announcementsQuery.data?.announcements.map((announcement) => (
+                        <tr key={announcement.id} className="hover:bg-slate-50/80 transition">
+                          <td className="py-3.5 px-4 max-w-md">
+                            <div className="font-semibold text-slate-900">{announcement.title}</div>
+                            <div className="text-xs text-slate-500 line-clamp-2 mt-0.5 whitespace-pre-wrap">
+                              {announcement.body}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-xs text-slate-700">
+                            {announcement.createdBy?.name || 'Admin'}
+                            {announcement.createdBy?.role && (
+                              <span className="text-[10px] text-slate-400 block uppercase">
+                                {announcement.createdBy.role}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-xs text-slate-500 whitespace-nowrap">
+                            {formatDateTime(announcement.createdAt)}
+                          </td>
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                                announcement.isActive
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  announcement.isActive ? 'bg-emerald-500' : 'bg-slate-400'
+                                }`}
+                              />
+                              {announcement.isActive ? 'Active' : 'Archived'}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <button
+                              onClick={() => handleToggleAnnouncementStatus(announcement)}
+                              disabled={toggleAnnouncementStatusMutation.isPending}
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg border transition ${
+                                announcement.isActive
+                                  ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                                  : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                              }`}
+                            >
+                              {announcement.isActive ? 'Archive' : 'Activate'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {announcementsQuery.data && announcementsQuery.data.pagination.totalPages > 1 && (
+                <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    Page {announcementsQuery.data.pagination.page} of{' '}
+                    {announcementsQuery.data.pagination.totalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setAnnouncementPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={announcementPage <= 1}
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setAnnouncementPage((prev) =>
+                          Math.min(prev + 1, announcementsQuery.data?.pagination.totalPages || prev)
+                        )
+                      }
+                      disabled={
+                        announcementPage >=
+                        (announcementsQuery.data?.pagination.totalPages || 1)
+                      }
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* CREATE ANNOUNCEMENT MODAL */}
+      {isCreateAnnouncementOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Megaphone className="w-5 h-5 text-purple-400" />
+                <h3 className="font-bold text-base">New Announcement</h3>
+              </div>
+              <button
+                onClick={() => setIsCreateAnnouncementOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAnnouncementSubmit} className="p-6 space-y-4">
+              {createAnnouncementError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-rose-700 text-xs">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{createAnnouncementError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={newAnnouncementTitle}
+                  onChange={(e) => setNewAnnouncementTitle(e.target.value)}
+                  placeholder="E.g., Holiday Schedule for Laundry"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-600 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Message / Body
+                </label>
+                <textarea
+                  value={newAnnouncementBody}
+                  onChange={(e) => setNewAnnouncementBody(e.target.value)}
+                  placeholder="Details of the announcement..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-600 outline-none resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateAnnouncementOpen(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createAnnouncementMutation.isPending}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:bg-purple-400"
+                >
+                  {createAnnouncementMutation.isPending ? 'Posting...' : 'Post Announcement'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* CREATE STAFF MODAL */}
       {isCreateStaffOpen && (

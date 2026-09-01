@@ -60,6 +60,7 @@
   - [x] Apply AppShell and maroon/cream design system to an authenticated student dashboard home page
   - [x] Implement Student Order History UI page (`/history`) with pagination and past order cards
   - [x] Implement Static Help Center FAQ UI page (`/help`) inside AppShell
+  - [x] Implement Student Announcements UI page (`/announcements`) inside AppShell with pagination
 
 ---
 

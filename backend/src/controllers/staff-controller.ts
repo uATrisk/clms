@@ -5,6 +5,7 @@ import { prisma } from '../index';
 import { AppError } from '../middlewares/error-handler';
 import { AuthenticatedRequest } from '../middlewares/auth-middleware';
 import { logStatusChange } from '../utils/status-logger';
+import { sendNotification } from '../services/notification-service';
 
 export const getOrdersQueue = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -157,6 +158,19 @@ export const acceptOrder = async (req: Request, res: Response, next: NextFunctio
       return updated;
     });
 
+    if (updatedOrder.student?.mobileNumber) {
+      try {
+        await sendNotification({
+          orderId: updatedOrder.id,
+          channel: 'SMS',
+          to: updatedOrder.student.mobileNumber,
+          message: `Your laundry bag #${updatedOrder.bagNumber} (Order: ${updatedOrder.orderCode}) has been received and is now being processed.`,
+        });
+      } catch (notifyErr) {
+        console.error('Failed to send acceptance notification:', notifyErr);
+      }
+    }
+
     res.status(200).json({ order: updatedOrder });
   } catch (error) {
     next(error);
@@ -286,6 +300,19 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
 
         return updated;
       });
+
+      if (updatedOrder.student?.mobileNumber) {
+        try {
+          await sendNotification({
+            orderId: updatedOrder.id,
+            channel: 'SMS',
+            to: updatedOrder.student.mobileNumber,
+            message: `Your laundry bag #${updatedOrder.bagNumber} (Order: ${updatedOrder.orderCode}) is ready for pickup. Your collection OTP is ${plainOtp}.`,
+          });
+        } catch (notifyErr) {
+          console.error('Failed to send ready-for-pickup notification:', notifyErr);
+        }
+      }
 
       return res.status(200).json({
         order: updatedOrder,

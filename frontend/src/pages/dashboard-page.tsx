@@ -8,7 +8,10 @@ import {
   PlusCircle,
   Inbox,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  KeyRound,
+  CalendarClock,
+  Loader2
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -122,28 +125,45 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="p-6">
-                  {/* Useful Details Area (Collection OTP / Expected Ready Date) */}
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {order.status === 'READY' && order.collectionOtp ? (
-                      <div className="flex-1 bg-green-50 border border-green-200 rounded-xl p-4 text-center flex flex-col items-center justify-center shadow-xs">
-                        <p className="text-xs font-semibold text-green-800 uppercase tracking-wider mb-1">Collection OTP</p>
-                        <p className="text-2xl sm:text-3xl font-bold tracking-widest text-green-700 my-0.5">{order.collectionOtp}</p>
-                        <p className="text-[11px] text-green-700/80 font-medium">Share this PIN with staff to collect your bag</p>
+                  {/* Details: OTP / Expected Ready / In-progress */}
+                  {order.status === 'READY' && order.collectionOtp ? (
+                    <div className="p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
+                      <div className="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+                        <KeyRound className="w-6 h-6" />
                       </div>
-                    ) : order.expectedReadyAt ? (
-                      <div className="flex-1 bg-cream-50 border border-cream-200 rounded-xl p-4 text-center flex flex-col items-center justify-center shadow-xs">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Expected Ready</p>
-                        <p className="text-xl sm:text-2xl font-bold text-maroon-900 my-0.5">
+                      <div>
+                        <h3 className="font-bold text-gray-900">Collection OTP</h3>
+                        <p className="text-lg font-bold tracking-widest text-green-700 mt-1">{order.collectionOtp}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
+                          Share this PIN with staff to collect your bag.
+                        </p>
+                      </div>
+                    </div>
+                  ) : order.expectedReadyAt ? (
+                    <div className="p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
+                      <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+                        <CalendarClock className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">Expected Ready</h3>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
                           {new Date(order.expectedReadyAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                         </p>
-                        <p className="text-[11px] text-gray-500 font-medium">Estimated pickup date</p>
                       </div>
-                    ) : (
-                      <div className="flex-1 bg-cream-50 border border-cream-200 rounded-xl p-4 text-center flex items-center justify-center shadow-xs min-h-[80px]">
-                        <p className="text-sm text-gray-600 font-medium">Your laundry request is currently in progress.</p>
+                    </div>
+                  ) : (
+                    <div className="p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
+                      <div className="w-12 h-12 bg-cream-100 text-maroon-400 rounded-xl flex items-center justify-center shrink-0">
+                        <Loader2 className="w-6 h-6 animate-spin" />
                       </div>
-                    )}
-                  </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">In Progress</h3>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
+                          Your laundry request is currently being processed.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex justify-center mt-6 pt-5 border-t border-cream-100">
                     <Link

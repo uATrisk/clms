@@ -140,8 +140,8 @@ export default function DashboardPage() {
 
                     <div className="flex justify-between items-center z-10 w-full relative">
                       {TRACKING_STEPS.map((step, idx) => {
-                        const isCompleted = currentStep > idx;
-                        const isCurrent = currentStep === idx;
+                        const isCompleted = currentStep > idx || (step.key === 'READY' && currentStep >= idx);
+                        const isCurrent = currentStep === idx && !isCompleted;
 
                         return (
                           <div key={step.key} className="flex flex-col items-center relative group">

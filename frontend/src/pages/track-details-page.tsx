@@ -104,7 +104,7 @@ function getComplaintStatusBadge(status: ComplaintStatus) {
     case 'UNDER_REVIEW':
       return {
         label: 'Under Review',
-        className: 'bg-blue-50 text-blue-700 border-blue-200',
+        className: 'bg-blue-50 text-maroon-800 border-blue-200',
       };
     case 'RESOLVED':
       return {
@@ -119,7 +119,7 @@ function getComplaintStatusBadge(status: ComplaintStatus) {
     default:
       return {
         label: status,
-        className: 'bg-gray-50 text-gray-700 border-gray-200',
+        className: 'bg-cream-50 text-gray-700 border-cream-200',
       };
   }
 }
@@ -213,8 +213,8 @@ export default function TrackDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      <div className="min-h-screen bg-cream-50 flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 text-maroon-700 animate-spin" />
         <p className="mt-4 text-gray-500 text-sm">Loading order details...</p>
       </div>
     );
@@ -223,10 +223,10 @@ export default function TrackDetailsPage() {
   if (isError || !data?.order) {
     const status = (error as any)?.response?.status;
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow p-8 text-center space-y-4">
+      <div className="min-h-screen bg-cream-50 flex flex-col items-center py-10 px-4">
+        <div className="w-full max-w-md bg-white border border-cream-200 rounded-2xl shadow p-8 text-center space-y-4">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="font-serif text-xl font-bold text-gray-900">
             {status === 403
               ? 'Access Denied'
               : status === 404
@@ -242,7 +242,7 @@ export default function TrackDetailsPage() {
           </p>
           <Link
             to="/track"
-            className="inline-block mt-4 bg-blue-600 text-white font-medium px-6 py-2.5 rounded-lg hover:bg-blue-700 transition"
+            className="inline-block mt-4 bg-maroon-700 text-white font-medium px-6 py-2.5 rounded-lg hover:bg-maroon-800 transition"
           >
             Go Back
           </Link>
@@ -259,9 +259,9 @@ export default function TrackDetailsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 sm:px-6">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between text-blue-600 mb-2">
+    <div className="min-h-screen bg-cream-50 flex flex-col items-center py-8 px-4 sm:px-6">
+      <div className="w-full max-w-md bg-white border border-cream-200 rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+        <div className="flex items-center justify-between text-maroon-700 mb-2">
           <Link
             to="/"
             className="flex items-center hover:underline focus:outline-none focus:underline"
@@ -271,7 +271,7 @@ export default function TrackDetailsPage() {
           </Link>
           <Link
             to="/track/search"
-            className="text-xs text-gray-500 hover:text-blue-600 font-medium transition-colors"
+            className="text-xs text-gray-500 hover:text-maroon-700 font-medium transition-colors"
           >
             Search by code
           </Link>
@@ -295,7 +295,7 @@ export default function TrackDetailsPage() {
         )}
 
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 uppercase">{order.orderCode}</h1>
+          <h1 className="font-serif text-2xl font-bold text-gray-900 uppercase">{order.orderCode}</h1>
           <p className="text-gray-500 mt-1 text-sm">
             Status: <span className="font-semibold text-gray-800">{order.status.replace('_', ' ')}</span>
           </p>
@@ -305,11 +305,11 @@ export default function TrackDetailsPage() {
         <div className="py-4">
           <div className="relative flex justify-between">
             {/* Background line */}
-            <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2" />
+            <div className="absolute top-1/2 left-0 right-0 h-1 bg-cream-200 -translate-y-1/2" />
 
             {/* Active line */}
             <div
-              className="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 transition-all duration-500"
+              className="absolute top-1/2 left-0 h-1 bg-maroon-700 -translate-y-1/2 transition-all duration-500"
               style={{
                 width: `${(Math.max(0, currentStepIndex) / (LIFECYCLE_STEPS.length - 1)) * 100}%`,
               }}
@@ -325,8 +325,8 @@ export default function TrackDetailsPage() {
                     className={clsx(
                       'w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors',
                       isCompleted
-                        ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-400'
+                        ? 'bg-maroon-700 border-maroon-700 text-white'
+                        : 'bg-white border-cream-300 text-gray-400'
                     )}
                   >
                     {isCompleted ? (
@@ -338,7 +338,7 @@ export default function TrackDetailsPage() {
                   <span
                     className={clsx(
                       'absolute -bottom-6 text-[10px] font-medium tracking-wide uppercase whitespace-nowrap',
-                      isCurrent ? 'text-blue-700' : isCompleted ? 'text-gray-700' : 'text-gray-400'
+                      isCurrent ? 'text-maroon-800' : isCompleted ? 'text-gray-700' : 'text-gray-400'
                     )}
                   >
                     {step}
@@ -350,7 +350,7 @@ export default function TrackDetailsPage() {
         </div>
 
         {/* Order Details */}
-        <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
+        <div className="mt-8 pt-6 border-t border-cream-200 space-y-4">
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-500">Expected ready</span>
             <span className="font-medium text-gray-900">
@@ -392,7 +392,7 @@ export default function TrackDetailsPage() {
         )}
 
         {/* Action Button: Report an Issue */}
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 border-t border-cream-200">
           <button
             type="button"
             onClick={() => {
@@ -409,9 +409,9 @@ export default function TrackDetailsPage() {
 
         {/* Complaints / Issues List */}
         {order.complaints && order.complaints.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-100 space-y-4">
+          <div className="mt-6 pt-6 border-t border-cream-200 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+              <h2 className="font-serif text-sm font-bold text-gray-900 flex items-center gap-1.5">
                 <AlertCircle className="w-4 h-4 text-gray-600" />
                 Reported Issues ({order.complaints.length})
               </h2>
@@ -423,7 +423,7 @@ export default function TrackDetailsPage() {
                 return (
                   <div
                     key={complaint.id}
-                    className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2 text-left"
+                    className="bg-cream-50 border border-cream-200 rounded-xl p-4 space-y-2 text-left"
                   >
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <span className="text-sm font-semibold text-gray-900">
@@ -474,16 +474,16 @@ export default function TrackDetailsPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
           <div
-            className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5"
+            className="w-full max-w-lg bg-white border border-cream-200 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+            <div className="flex items-center justify-between border-b border-cream-200 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700">
                   <AlertTriangle className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Report an Issue</h2>
+                  <h2 className="font-serif text-lg font-bold text-gray-900">Report an Issue</h2>
                   <p className="text-xs text-gray-500">Order #{order.orderCode}</p>
                 </div>
               </div>
@@ -516,7 +516,7 @@ export default function TrackDetailsPage() {
                   value={category}
                   onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
                   disabled={isSubmitting}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-xl border border-cream-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm focus:border-maroon-700 focus:outline-none focus:ring-1 focus:ring-maroon-700"
                 >
                   {COMPLAINT_CATEGORIES.map((cat) => (
                     <option key={cat.value} value={cat.value}>
@@ -553,7 +553,7 @@ export default function TrackDetailsPage() {
                     'w-full rounded-xl border px-3.5 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 transition',
                     validationError
                       ? 'border-red-500 focus:border-red-600 focus:ring-red-600 bg-red-50/20'
-                      : 'border-gray-300 focus:border-blue-600 focus:ring-blue-600 bg-white'
+                      : 'border-cream-300 focus:border-maroon-700 focus:ring-maroon-700 bg-white'
                   )}
                 />
                 {validationError && (
@@ -565,7 +565,7 @@ export default function TrackDetailsPage() {
               </div>
 
               {/* Actions */}
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-cream-200 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -577,7 +577,7 @@ export default function TrackDetailsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl transition flex items-center gap-2 shadow-sm"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-maroon-700 hover:bg-maroon-800 disabled:opacity-50 rounded-xl transition flex items-center gap-2 shadow-sm"
                 >
                   {isSubmitting ? (
                     <>

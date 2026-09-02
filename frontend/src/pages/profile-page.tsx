@@ -89,20 +89,20 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-maroon-700 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 flex flex-col font-sans flex-1">
+    <div className="bg-cream-50 flex flex-col font-sans flex-1">
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden py-8 px-6 sm:px-8">
+        <div className="w-full max-w-md bg-white border border-cream-200 rounded-2xl shadow-xl overflow-hidden py-8 px-6 sm:px-8">
           <div className="text-center mb-6">
-            <div className="mx-auto bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-              <User className="w-6 h-6 text-blue-600" />
+            <div className="mx-auto bg-cream-200 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+              <User className="w-6 h-6 text-maroon-700" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Your Profile</h1>
+            <h1 className="font-serif text-2xl font-bold tracking-tight text-gray-900">Your Profile</h1>
             <p className="text-gray-500 mt-2 text-sm">
               Please complete your laundry profile. Your Bag Number and Mobile Number will be used for all future orders.
             </p>
@@ -129,7 +129,7 @@ export default function ProfilePage() {
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-all ${
                   errors.bagNumber
                     ? 'border-red-300 focus:ring-red-200 bg-red-50'
-                    : 'border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white'
+                    : 'border-cream-300 focus:ring-maroon-200 focus:border-maroon-700 bg-white'
                 }`}
               />
               {errors.bagNumber && (
@@ -150,7 +150,7 @@ export default function ProfilePage() {
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-all ${
                   errors.mobileNumber
                     ? 'border-red-300 focus:ring-red-200 bg-red-50'
-                    : 'border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white'
+                    : 'border-cream-300 focus:ring-maroon-200 focus:border-maroon-700 bg-white'
                 }`}
               />
               {errors.mobileNumber && (
@@ -168,14 +168,14 @@ export default function ProfilePage() {
                 maxLength={30}
                 {...register('collegeId')}
                 placeholder="e.g. RU-123456"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 focus:outline-none transition-all bg-white"
+                className="w-full px-4 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-maroon-200 focus:border-maroon-700 focus:outline-none transition-all bg-white"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+              className="w-full bg-maroon-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-maroon-200 hover:bg-maroon-800 hover:shadow-maroon-300 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
             >
               {isSubmitting ? (
                 <>

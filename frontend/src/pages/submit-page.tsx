@@ -68,11 +68,11 @@ export default function SubmitPage() {
   };
 
   return (
-    <div className="bg-gray-50 flex flex-col font-sans flex-1">
+    <div className="bg-cream-50 flex flex-col font-sans flex-1">
       <div className="flex-1 flex flex-col items-center py-8 px-4 sm:px-6">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+        <div className="w-full max-w-md bg-white border border-cream-200 rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
           {/* Header */}
-          <div className="flex items-center text-blue-600 mb-2">
+          <div className="flex items-center text-maroon-700 mb-2">
             <Link to="/" className="flex items-center hover:underline focus:outline-none focus:underline">
               <ArrowLeft className="w-4 h-4 mr-1" />
               <span className="text-sm font-medium">Back to Home</span>
@@ -80,27 +80,27 @@ export default function SubmitPage() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Drop off Laundry</h1>
+            <h1 className="font-serif text-2xl font-bold text-gray-900">Drop off Laundry</h1>
             <p className="text-gray-500 mt-1 text-sm leading-relaxed">
               Submit a new laundry request for Bag <span className="font-semibold text-gray-800">{user?.bagNumber}</span>.
             </p>
           </div>
 
           {/* Profile Quick Summary Card */}
-          <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3.5 flex items-center justify-between text-xs text-blue-900">
+          <div className="bg-maroon-50/70 border border-maroon-200 rounded-xl p-3.5 flex items-center justify-between text-xs text-maroon-900">
             <div className="flex items-center gap-2.5">
-              <div className="bg-blue-600 text-white p-1.5 rounded-lg">
+              <div className="bg-maroon-700 text-white p-1.5 rounded-lg">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
                 <p className="font-semibold">Bag #{user?.bagNumber}</p>
-                <p className="text-blue-700/80">{user?.email}</p>
+                <p className="text-maroon-800/80">{user?.email}</p>
               </div>
             </div>
             <Link
               to="/profile"
               state={{ from: { pathname: '/submit' } }}
-              className="text-blue-600 font-semibold hover:underline"
+              className="text-maroon-700 font-semibold hover:underline"
             >
               Change
             </Link>
@@ -154,7 +154,7 @@ export default function SubmitPage() {
                 className={`w-full p-3 border rounded-xl outline-none transition-all text-lg font-medium focus:ring-2 disabled:bg-gray-100 disabled:text-gray-500 ${
                   errors.selfReportedCount
                     ? 'border-red-300 focus:ring-red-500 text-red-900'
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    : 'border-cream-300 focus:ring-maroon-700 focus:border-maroon-700'
                 }`}
               />
               {errors.selfReportedCount && (
@@ -169,7 +169,7 @@ export default function SubmitPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 disabled:bg-blue-400 flex items-center justify-center transition-all cursor-pointer"
+                className="w-full bg-maroon-700 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-maroon-200 hover:bg-maroon-800 hover:shadow-maroon-300 disabled:bg-maroon-400 flex items-center justify-center transition-all cursor-pointer"
               >
                 {isSubmitting ? (
                   <>

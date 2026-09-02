@@ -51,15 +51,15 @@ export default function LoginPage() {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div className="min-h-screen bg-cream-50 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white border border-cream-200 rounded-2xl shadow-xl overflow-hidden">
         {/* Header */}
-        <div className="bg-blue-600 p-8 text-center text-white">
+        <div className="bg-maroon-900 p-8 text-center text-white">
           <div className="mx-auto bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mb-4">
             <Shirt className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Student Sign In</h1>
-          <p className="text-blue-100 mt-2 text-sm">
+          <h1 className="font-serif text-2xl font-bold tracking-tight">Student Sign In</h1>
+          <p className="text-cream-200 mt-2 text-sm">
             Rishihood University Laundry System
           </p>
         </div>
@@ -107,10 +107,10 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="mt-8 pt-4 border-t border-gray-100 w-full text-center">
+          <div className="mt-8 pt-4 border-t border-cream-200 w-full text-center">
             <Link
               to="/"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm text-maroon-700 hover:text-maroon-900 font-medium"
             >
               ← Back to Home
             </Link>

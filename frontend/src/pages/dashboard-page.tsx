@@ -25,7 +25,8 @@ const TRACKING_STEPS = [
   { key: 'SUBMITTED', label: 'Received', Icon: Inbox },
   { key: 'ACCEPTED', label: 'Sorting/Accepted', Icon: Package },
   { key: 'PROCESSING', label: 'Washing/Processing', Icon: Droplets },
-  { key: 'READY', label: 'Ready for Pickup', Icon: Sparkles }
+  { key: 'READY', label: 'Ready for Pickup', Icon: Sparkles },
+  { key: 'COLLECTED', label: 'Collected', Icon: CheckCircle2 }
 ];
 
 const getStepIndex = (status: string) => {
@@ -135,13 +136,13 @@ export default function DashboardPage() {
 
                     <div
                       className="absolute top-1/2 left-0 h-1 bg-maroon-600 -z-10 rounded-full transform -translate-y-1/2 transition-all duration-500 origin-left"
-                      style={{ width: `${(Math.min(currentStep, 3) / 3) * 100}%` }}
+                      style={{ width: `${(Math.min(currentStep, 4) / 4) * 100}%` }}
                     ></div>
 
                     <div className="flex justify-between items-center z-10 w-full relative">
                       {TRACKING_STEPS.map((step, idx) => {
-                        const isCompleted = currentStep > idx || (step.key === 'READY' && currentStep >= idx);
-                        const isCurrent = currentStep === idx && !isCompleted;
+                        const isCompleted = currentStep > idx;
+                        const isCurrent = currentStep === idx;
 
                         return (
                           <div key={step.key} className="flex flex-col items-center relative group">

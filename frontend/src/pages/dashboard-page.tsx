@@ -9,9 +9,6 @@ import {
   PlusCircle,
   Inbox,
   ArrowRight,
-  Package,
-  Droplets,
-  CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -21,20 +18,16 @@ function cx(...args: (string | undefined | null | false)[]) {
   return twMerge(clsx(args));
 }
 
-const TRACKING_STEPS = [
-  { key: 'SUBMITTED', label: 'Received', Icon: Inbox },
-  { key: 'ACCEPTED', label: 'Sorting/Accepted', Icon: Package },
-  { key: 'PROCESSING', label: 'Washing/Processing', Icon: Droplets },
-  { key: 'READY', label: 'Ready for Pickup', Icon: Sparkles },
-  { key: 'COLLECTED', label: 'Collected', Icon: CheckCircle2 }
-];
+const STATUS_LABELS: Record<string, string> = {
+  SUBMITTED: 'Received',
+  ACCEPTED: 'Sorting/Accepted',
+  PROCESSING: 'Washing/Processing',
+  READY: 'Ready for Pickup',
+  COLLECTED: 'Collected'
+};
 
-const getStepIndex = (status: string) => {
-  const index = TRACKING_STEPS.findIndex(s => s.key === status);
-  if (index !== -1) return index;
-  if (status === 'DELAYED' || status === 'COMPLAINT_RAISED' || status === 'UNDER_REVIEW') return 2;
-  if (status === 'COLLECTED') return 4;
-  return 0;
+const getStatusLabel = (status: string) => {
+  return STATUS_LABELS[status] || status.replace(/_/g, ' ');
 };
 
 export default function DashboardPage() {
@@ -53,7 +46,6 @@ export default function DashboardPage() {
   });
 
   const order = data?.order;
-  const currentStep = order ? getStepIndex(order.status) : -1;
   const isDelayed = order?.status === 'DELAYED';
 
   return (
@@ -130,43 +122,15 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="p-6 sm:p-8">
-                  {/* Horizontal Step Indicator */}
-                  <div className="relative mb-8 sm:mb-12 mt-4 max-w-3xl mx-auto px-2">
-                    <div className="absolute top-1/2 left-0 w-full h-1 bg-cream-200 -z-10 rounded-full transform -translate-y-1/2"></div>
-
-                    <div
-                      className="absolute top-1/2 left-0 h-1 bg-maroon-600 -z-10 rounded-full transform -translate-y-1/2 transition-all duration-500 origin-left"
-                      style={{ width: `${(Math.min(currentStep, 4) / 4) * 100}%` }}
-                    ></div>
-
-                    <div className="flex justify-between items-center z-10 w-full relative">
-                      {TRACKING_STEPS.map((step, idx) => {
-                        const isCompleted = currentStep > idx;
-                        const isCurrent = currentStep === idx;
-
-                        return (
-                          <div key={step.key} className="flex flex-col items-center relative group">
-                            <div className={cx(
-                              "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10",
-                              isCompleted ? "bg-maroon-600 border-maroon-600 text-white" :
-                              isCurrent ? "bg-white border-maroon-600 text-maroon-700 ring-4 ring-maroon-100 shadow-md scale-110" :
-                              "bg-white border-cream-300 text-gray-300"
-                            )}>
-                              {isCompleted ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <step.Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
-                            </div>
-                            <span className={cx(
-                              "absolute top-full mt-3 text-[10px] sm:text-xs font-semibold tracking-wide whitespace-nowrap transition-colors duration-300 text-center max-w-[70px] sm:max-w-none leading-tight",
-                              isCompleted || isCurrent ? "text-maroon-900" : "text-gray-400"
-                            )}>
-                              {step.label}
-                            </span>
-                          </div>
-                        );
-                      })}
+                  {/* Current Status Display */}
+                  <div className="py-6 flex flex-col items-center justify-center text-center gap-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Status</p>
+                    <div className="inline-flex items-center px-6 py-2.5 rounded-full bg-maroon-700 text-white font-serif font-bold text-lg sm:text-xl shadow-sm">
+                      {getStatusLabel(order.status)}
                     </div>
                   </div>
 
-                  <div className="flex justify-center mt-12 pt-6 border-t border-cream-100">
+                  <div className="flex justify-center mt-6 pt-6 border-t border-cream-100">
                     <Link
                       to={`/track/${order.orderCode}`}
                       className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-cream-300 rounded-xl text-maroon-700 font-medium hover:bg-cream-50 hover:border-maroon-200 transition-all shadow-sm hover:shadow active:scale-95 group focus:outline-none focus:ring-2 focus:ring-maroon-500/30"

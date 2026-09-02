@@ -23,9 +23,9 @@ export const Header = () => {
   }, [isOpen]);
 
   return (
-    <header className="w-full bg-white border-b border-gray-100 py-3 px-4 sm:px-8 flex items-center justify-between shadow-xs">
-      <Link to="/" className="flex items-center gap-2 font-bold text-gray-900 text-lg">
-        <span className="text-blue-600">🧺</span> CLMS
+    <header className="w-full bg-white border-b border-cream-200 py-3 px-4 sm:px-8 flex items-center justify-between shadow-xs">
+      <Link to="/" className="flex items-center gap-2 font-serif font-bold text-gray-900 text-lg">
+        <span className="text-maroon-700">🧺</span> CLMS
       </Link>
 
       <div className="flex items-center gap-4">
@@ -33,7 +33,7 @@ export const Header = () => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm hover:bg-blue-600 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer shadow-sm"
+              className="w-10 h-10 rounded-full bg-maroon-50 text-maroon-800 border border-maroon-200 flex items-center justify-center font-serif font-bold text-sm hover:bg-maroon-700 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-maroon-700 focus:ring-offset-2 cursor-pointer shadow-sm"
               aria-expanded={isOpen}
               aria-label="User Menu"
             >
@@ -41,24 +41,24 @@ export const Header = () => {
             </button>
 
             {isOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 animate-fade-in origin-top-right">
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-cream-200 py-1.5 z-50 animate-fade-in origin-top-right">
                 <div className="px-4 py-3">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                  <p className="text-sm font-serif font-semibold text-gray-900 truncate">{user.name}</p>
                   {user.bagNumber && (
-                    <p className="text-xs text-gray-500 font-medium truncate mt-0.5">
+                    <p className="text-xs text-maroon-700 font-medium truncate mt-0.5">
                       Bag #{user.bagNumber}
                     </p>
                   )}
                 </div>
 
-                <div className="h-px bg-gray-100 my-1"></div>
+                <div className="h-px bg-cream-200 my-1"></div>
 
                 <Link
                   to="/profile"
                   onClick={() => setIsOpen(false)}
-                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-cream-100 hover:text-maroon-800 flex items-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Settings className="w-4 h-4 text-gray-400" />
+                  <Settings className="w-4 h-4 text-maroon-600" />
                   Profile
                 </Link>
 
@@ -78,7 +78,7 @@ export const Header = () => {
         ) : (
           <Link
             to="/login"
-            className="text-xs font-semibold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="text-xs font-semibold bg-maroon-700 text-white px-4 py-2 rounded-lg hover:bg-maroon-800 transition"
           >
             Sign In
           </Link>

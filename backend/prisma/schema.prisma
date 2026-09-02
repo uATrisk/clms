@@ -53,6 +53,11 @@ enum NotificationChannel {
   EMAIL
 }
 
+enum StudentGender {
+  MALE
+  FEMALE
+}
+
 // ----------------------------------------------------------------------
 // MODELS
 // ----------------------------------------------------------------------
@@ -64,6 +69,7 @@ model Student {
   collegeId     String?  @map("college_id")
   bagNumber     String?  @map("bag_number")
   mobileNumber  String?  @map("mobile_number")
+  gender        StudentGender?
   createdAt     DateTime @default(now()) @map("created_at")
 
   // Relations

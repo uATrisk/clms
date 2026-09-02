@@ -331,4 +331,24 @@ Adding an `is_active` boolean ensures the ability to softly "archive" items with
 ### Status
 Accepted
 
+---
+
+## [2026-09-02] ADR 017: Gender Tracking on Student Model for Bag Number Prefixing
+
+### Context
+Bag numbers will now be categorized and prefixed by student gender (`B-` for boys/male, `G-` for girls/female) to streamline physical sorting, hostel delivery, and washing operations. We need to store student gender within the data model while ensuring backward compatibility with existing profile onboarding flows.
+
+### Decision
+We added gender tracking to the `Student` model in `backend/prisma/schema.prisma`:
+1. **Enum Definition:** Introduced the `StudentGender` enum with values `MALE` and `FEMALE`, adhering to standard PostgreSQL enum conventions in this schema.
+2. **Schema-Level Nullability:** Added `gender StudentGender?` as an optional/nullable field at the database level on the `Student` model.
+3. **Application-Layer Enforcement:** Similar to `bagNumber` and `mobileNumber` (see ADR 012), gender is nullable at the database level to permit initial Google OAuth account creation, while profile completeness and validation are enforced at the application layer during onboarding/profile setup.
+
+### Rationale
+- **Schema Consistency:** Mirrors the existing nullable pattern used for `bagNumber` and `mobileNumber`, preventing friction during first-time Google sign-in before profile completion.
+- **Type Safety & Data Integrity:** A dedicated database enum prevents arbitrary strings and aligns with existing enum patterns (`OrderStatus`, `StaffRole`, etc.).
+
+### Status
+Accepted
+
 

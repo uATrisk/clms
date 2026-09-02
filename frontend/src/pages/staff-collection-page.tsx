@@ -27,6 +27,7 @@ type ReadyOrder = {
   bagNumber: string;
   status: string;
   actualReadyAt?: string;
+  collectionOtpPlain?: string;
   student?: {
     name?: string;
     email?: string;
@@ -46,7 +47,6 @@ export default function StaffCollectionPage() {
   // Collect Modal State
   const [collectModalOrder, setCollectModalOrder] = useState<ReadyOrder | null>(null);
   const [otpInput, setOtpInput] = useState('');
-  const [returnedCountInput, setReturnedCountInput] = useState('');
   const [isAdminOverride, setIsAdminOverride] = useState(false);
   const [adminPinInput, setAdminPinInput] = useState('');
   const [isSubmittingCollect, setIsSubmittingCollect] = useState(false);
@@ -93,9 +93,8 @@ export default function StaffCollectionPage() {
 
   const handleOpenCollectModal = (order: ReadyOrder) => {
     setCollectModalOrder(order);
-    setOtpInput('');
+    setOtpInput(order.collectionOtpPlain || '');
     setAdminPinInput('');
-    setReturnedCountInput('');
     setIsAdminOverride(false);
     setModalError(null);
   };
@@ -105,7 +104,6 @@ export default function StaffCollectionPage() {
     setCollectModalOrder(null);
     setOtpInput('');
     setAdminPinInput('');
-    setReturnedCountInput('');
     setIsAdminOverride(false);
     setModalError(null);
   };
@@ -114,15 +112,7 @@ export default function StaffCollectionPage() {
     e.preventDefault();
     if (!collectModalOrder) return;
 
-    const count = parseInt(returnedCountInput, 10);
-    if (isNaN(count) || count < 0) {
-      setModalError('Please enter a valid non-negative number of returned garments.');
-      return;
-    }
-
-    const payload: { returnedCount: number; otp?: string; adminPin?: string } = {
-      returnedCount: count,
-    };
+    const payload: { otp?: string; adminPin?: string } = {};
 
     if (isAdminOverride) {
       const trimmedPin = adminPinInput.trim();
@@ -582,26 +572,6 @@ export default function StaffCollectionPage() {
                   </div>
                 </div>
               )}
-
-              {/* Returned Count Field */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Returned Garment Count <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={returnedCountInput}
-                  onChange={(e) => setReturnedCountInput(e.target.value)}
-                  placeholder="e.g. 5"
-                  required
-                  className="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 transition"
-                />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Physically verify the number of items being handed back to the student.
-                </p>
-              </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button

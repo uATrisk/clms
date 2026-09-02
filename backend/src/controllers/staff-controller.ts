@@ -515,6 +515,7 @@ export const searchOrders = async (req: Request, res: Response, next: NextFuncti
         bagNumber: true,
         status: true,
         actualReadyAt: true,
+        collectionOtpPlain: true,
         student: {
           select: {
             name: true,
@@ -534,7 +535,7 @@ const collectOrderSchema = z
   .object({
     otp: z.string().optional(),
     adminPin: z.string().optional(),
-    returnedCount: z.number().int().min(0, 'Returned count must be a non-negative integer'),
+    returnedCount: z.number().int().min(0, 'Returned count must be a non-negative integer').optional(),
   })
   .refine(
     (data) => (data.otp && data.otp.trim().length > 0) || (data.adminPin && data.adminPin.trim().length > 0),
@@ -619,12 +620,6 @@ export const collectOrder = async (req: Request, res: Response, next: NextFuncti
         throw error;
       }
 
-      if (order.otpExpiresAt && new Date() > order.otpExpiresAt) {
-        const error = new Error('OTP expired, please regenerate') as AppError;
-        error.status = 400;
-        throw error;
-      }
-
       const isOtpValid = await bcrypt.compare(otp.trim(), order.collectionOtp);
       if (!isOtpValid) {
         const error = new Error('Invalid OTP') as AppError;
@@ -637,7 +632,7 @@ export const collectOrder = async (req: Request, res: Response, next: NextFuncti
     if (isOverride) {
       noteParts.push('Collected via ADMIN PIN OVERRIDE - OTP was bypassed');
     }
-    if (order.verifiedCount !== null && order.verifiedCount !== returnedCount) {
+    if (returnedCount !== undefined && order.verifiedCount !== null && order.verifiedCount !== returnedCount) {
       noteParts.push(`Returned count mismatch: verified ${order.verifiedCount} vs returned ${returnedCount}`);
     }
     const note = noteParts.length > 0 ? noteParts.join('. ') : undefined;

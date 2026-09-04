@@ -45,6 +45,7 @@
   - [x] Expose `POST /api/auth/google` for ID token verification & domain checks
   - [x] Backfill/Migrate existing test student definitions safely
   - [x] Implement Profile Completeness Support (`GET/PATCH /api/students/me` & simplified `POST /api/orders`)
+  - [x] Add gender tracking and bag-number auto-prefixing (`B-`/`G-`) to Student model and profile completion flow
   - [x] Enforce Single Active Order per Student (`GET /api/orders/my-active` & `409 Conflict` on `POST /api/orders`)
   - [x] Implement Student Order History API (`GET /api/orders/history`) with pagination & past order status filtering
 - [x] **Frontend Identity Provider & Active Order Tracking**
@@ -67,14 +68,14 @@
 ### Phase 2: Washer & Collection Dashboards, Status Lifecycle & OTP Flow
 - [x] **Washer Dashboard**
   - [x] Staff Login View (`/staff/login`)
-  - [x] Live incoming requests queue (`GET /api/staff/orders/queue`) & Active wash orders (`GET /api/staff/orders/active`)
+  - [x] Live incoming requests queue (`GET /api/staff/orders/queue`) & Active wash orders (`GET /api/staff/orders/active`) with responsive search UI
   - [x] Order Acceptance & dual-count verification UI (`PATCH /api/staff/orders/:id/accept`)
   - [x] Count mismatch auto-flagging & visual alert logic
   - [x] Status updates: Processing (`PATCH /api/staff/orders/:id/status`) with Expected Date (ETA) setting
   - [x] Status update: Mark Ready with modal OTP display (`PATCH /api/staff/orders/:id/status`)
   - [x] Bulk status update feature
 - [x] **Collection Center Dashboard**
-  - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` & `/staff/collection` search UI)
+  - [x] Search Orders by Bag Number / College ID / Mobile (`GET /api/staff/orders/search` & `/staff/collection` responsive search UI)
   - [x] Collection OTP verification & count returned verification (`PATCH /api/staff/orders/:id/collect` & `/staff/collection` modal UI)
   - [x] Manual override with Admin PIN support
 
@@ -101,7 +102,7 @@
   - [x] Staff account management CRUD (`POST/PATCH /api/admin/staff`, `GET /api/admin/staff`)
   - [x] Master order view with filters by status, date (`GET /api/admin/orders`)
   - [x] Admin announcements management CRUD & UI (`POST/PATCH /api/admin/announcements`, `GET /api/admin/announcements`)
-  - [x] Admin Login and unified UI dashboard connecting `/admin/dashboard`, `/staff/orders`, and `/staff/collection` (with maroon/cream design system applied to staff and admin pages).
+  - [x] Admin Login and unified UI dashboard connecting `/admin/dashboard`, `/staff/orders`, and `/staff/collection` (with maroon/cream design system and student-style header profile dropdown).
 - [ ] **Analytics & Reporting**
   - [x] Analytics backend aggregation (`GET /api/admin/analytics/summary`)
   - [x] Analytics UI: Turnaround time, peak submission hours, complaint frequency
@@ -112,6 +113,7 @@
 
 ### Phase 5: Testing, Responsiveness, Polish & Deployment
 - [ ] **Quality Assurance & Testing**
+  - [x] Create deterministic dev seed dataset to support local UI/E2E testing
   - [ ] Unit & integration tests for order state machine transitions
   - [ ] End-to-end testing of the complete submission-to-collection lifecycle
   - [ ] Rate limiting on OTP and public submission endpoints
@@ -120,13 +122,13 @@
   - [ ] PWA manifest setup for lightweight installable home screen access
 - [ ] **Deployment & Documentation**
   - [ ] CI/CD pipeline with GitHub Actions
-  - [ ] Deployment setup for frontend (Vercel) and backend/database (Render/Railway/Supabase)
+  - [x] Deployment preparation setup for frontend (Vercel) and backend (Render) connected to existing Neon PostgreSQL
   - [ ] Staff user guide and operational runbook
 
 ---
 
 ## Last Session Summary
-- **Supabase Cloud Database Setup:** Configured connection pooling (`DATABASE_URL`) on port 6543 and direct session connection (`DIRECT_URL`) on port 5432. Executed initial migration `20260830171425_init` and re-seeded test accounts.
+- **Neon Cloud Database Setup:** Configured connection pooling (`DATABASE_URL`) on port 5432 and direct session connection (`DIRECT_URL`) on port 5432. Executed initial migration `20260830171425_init` and re-seeded test accounts.
 - **Backend Core & Auth API:**
   - Implemented Staff/Admin JWT Authentication (`POST /api/auth/login`) with bcrypt verification and role-based token issuance.
   - Implemented Public Order Submission (`POST /api/orders`) with registration-free student matching/upsert, unique `LN-XXXX-XXXX` tracking code generation, and initial `SUBMITTED` status assignment.
@@ -141,8 +143,19 @@
   - Implemented the `POST /api/auth/google` controller using `google-auth-library`.
   - Added unique `email` column to `Student` Prisma model and propagated constraint using manual postgres injection.
 
+### Current Session: Foreign Key Protection in Staff Workflows
+- **Root Cause Identified:** The Prisma constraint `orders_assigned_washer_id_fkey` threw an error on `acceptOrder` because the staff ID carried in the JWT (e.g. from an old seed or wiped database) was blindly assigned to `assignedWasherId` without database verification.
+- **Implemented Fix:** Modified `staff-controller.ts:acceptOrder` to look up the staff member in the database (via `prisma.staff.findUnique`) right before validating the staff's active status and initiating the order acceptance transaction.
+- **Architecture Review:** Evaluated whether the direct `prisma.staff.findUnique(...)` call violated a layered pattern. Reviewed existing implementations like `order-controller.ts` and adjacent `staff-controller.ts` methods (`updateOrderStatus`, `collectOrder`). Confirmed that **direct Prisma access within controllers is the explicitly established convention** for the CLMS backend, requiring no Repository layer refactor.
+- **Added Automated Testing:** Created a raw Node JS `assert` based test (`staff-controller.test.ts`) that runs against the acceptOrder logic independently and added it as an `npm run test` script to `package.json`, successfully catching mock foreign key invalid ID assignment without triggering Prisma.
+
+### Test Runtime Cycle Resolution
+- **Issue:** Running `npm test` resulted in `ReferenceError: Cannot access 'getOrdersQueue' before initialization` due to a module import cycle.
+- **Root Cause:** `staff-controller.test.ts` imported `staff-controller.ts`, which imported the `prisma` client from `index.ts`. Because `index.ts` serves as the entry point and directly mounts `staff-router.ts` (which imports `staff-controller.ts`), testing an isolated controller triggered full-application module parsing before the controller's own methods had mapped, causing TDZ execution faults.
+- **Resolution:** A dedicated `db.ts` file was created solely for Prisma Client initialization, abstracting it out of the application entry point. All 9 instances across controllers, routes, and services that `import { prisma } from '../index'` were updated to target `../db` instead. Expanded `staff-controller.test.ts` logic verified full boundary behaviors are preserved.
+
 ### How to Run Locally:
-1. **Backend:** Ensure `.env` in `/backend` contains the Supabase connection strings and `JWT_SECRET`. Run `npm run prisma:generate && npm run seed` then start with `npm run dev`.
+1. **Backend:** Ensure `.env` in `/backend` contains the Neon connection strings and `JWT_SECRET`. Run `npm run prisma:generate && npm run seed` then start with `npm run dev`.
 2. **Frontend:** CD into `/frontend`, run `npm install`, then start with `npm run dev`.
 3. Test Backend endpoints:
    - Health check: `curl http://localhost:4000/api/health`

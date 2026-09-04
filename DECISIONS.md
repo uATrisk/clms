@@ -344,11 +344,50 @@ We added gender tracking to the `Student` model in `backend/prisma/schema.prisma
 2. **Schema-Level Nullability:** Added `gender StudentGender?` as an optional/nullable field at the database level on the `Student` model.
 3. **Application-Layer Enforcement:** Similar to `bagNumber` and `mobileNumber` (see ADR 012), gender is nullable at the database level to permit initial Google OAuth account creation, while profile completeness and validation are enforced at the application layer during onboarding/profile setup.
 
+### Status
+Accepted
+
+---
+
+## [2026-09-05] ADR 018: Removal of OTP Modal Popup in Staff Order Lifecycle
+
+### Context
+In the Phase 2 implementation of the washer dashboard, the UI displayed a modal popup explicitly showing the Collection OTP to washer staff whenever they marked an order "READY". This was intended to allow staff to optionally inform students of their OTP. Operational review identified this as a potential security/process bottleneck, as the student-facing OTP is strictly intended for the final collection handover at the hub, not for the washer to manage or relay.
+
+### Decision
+We removed the OTP modal popup entirely. When a washer marks an order "READY", the application now silently generates the token and presents a non-intrusive confirmation toast banner to the staff, confirming order status without displaying the OTP.
+
 ### Rationale
-- **Schema Consistency:** Mirrors the existing nullable pattern used for `bagNumber` and `mobileNumber`, preventing friction during first-time Google sign-in before profile completion.
-- **Type Safety & Data Integrity:** A dedicated database enum prevents arbitrary strings and aligns with existing enum patterns (`OrderStatus`, `StaffRole`, etc.).
+- **Separation of Concerns:** The responsibility of managing the Collection OTP rests solely with the hub collection staff at the time of pickup, not with the washing staff during processing. This was an intentional UX decision to eliminate unnecessary modal dismissal steps and prevent leaking the collection token upstream before the student arrives for pickup.
+- **Improved UX:** Removing the modal eliminates unnecessary staff clicks and streamlines both single-order and bulk-order processing workflows in the washer queue.
+
+### Note
+This change was applied via a one-off script (`frontend/patch.cjs`, now deleted) rather than a normal manual edit.
 
 ### Status
 Accepted
+
+---
+
+## [2026-09-05] ADR 019: Database Provider Migration from Supabase to Neon PostgreSQL
+
+### Context
+The College Laundry Management System initially utilized a managed PostgreSQL database hosted on Supabase. As part of infrastructure planning and hosting realignment, the database provider was transitioned to Neon Serverless PostgreSQL.
+
+### Decision
+Switched the primary database provider from Supabase to Neon PostgreSQL.
+
+### Rationale
+- **User Decision:** Migration requested to align with deployment requirements on Neon.
+
+### What Was Done
+1. **Connection String Configuration:** Updated `DATABASE_URL` (using Neon connection pooling via PgBouncer on port 5432) and `DIRECT_URL` (direct connection string for schema migrations and CLI operations) in `backend/.env` and `backend/.env.example`.
+2. **Schema & Migration Verification:** Verified that all 8 Prisma migrations (from `20260830171425_init` through `20260905000000_add_order_status_submitted_at_index`) are applied cleanly to the Neon database instance.
+3. **Validation:** Confirmed operational readiness and schema consistency using `npx prisma migrate status`.
+4. **Documentation:** Updated `docs/DEPLOYMENT.md` to reflect Neon connection pooling and direct connection guidelines.
+
+### Status
+Accepted
+
 
 

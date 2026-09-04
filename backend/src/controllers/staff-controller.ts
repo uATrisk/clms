@@ -1,34 +1,71 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { prisma } from '../index';
+import { prisma } from '../db';
 import { AppError } from '../middlewares/error-handler';
 import { AuthenticatedRequest } from '../middlewares/auth-middleware';
 import { logStatusChange } from '../utils/status-logger';
-import { sendNotification } from '../services/notification-service';
+
+const queueQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
 
 export const getOrdersQueue = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orders = await prisma.order.findMany({
-      where: {
-        status: 'SUBMITTED',
-      },
-      include: {
-        student: {
-          select: {
-            name: true,
-            email: true,
-            mobileNumber: true,
-            collegeId: true,
+    const parsed = queueQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid pagination parameters', details: parsed.error.format() });
+    }
+
+    const { page, limit } = parsed.data;
+    const skip = (page - 1) * limit;
+
+    const [orders, totalCount] = await Promise.all([
+      prisma.order.findMany({
+        where: {
+          status: 'SUBMITTED',
+        },
+        select: {
+          id: true,
+          orderCode: true,
+          bagNumber: true,
+          selfReportedCount: true,
+          status: true,
+          submittedAt: true,
+          createdAt: true,
+          student: {
+            select: {
+              name: true,
+              email: true,
+              collegeId: true,
+            },
           },
         },
-      },
-      orderBy: {
-        submittedAt: 'asc',
-      },
-    });
+        orderBy: {
+          submittedAt: 'asc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.order.count({
+        where: {
+          status: 'SUBMITTED',
+        },
+      }),
+    ]);
 
-    res.status(200).json({ orders });
+    const totalPages = Math.ceil(totalCount / limit);
+
+    res.status(200).json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -75,6 +112,13 @@ export const acceptOrder = async (req: Request, res: Response, next: NextFunctio
 
     if (!staffId) {
       const error = new Error('Unauthorized: Staff ID not found in token') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const staff = await prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff || !staff.active) {
+      const error = new Error('Unauthorized: Staff record not found or inactive') as AppError;
       error.status = 401;
       throw error;
     }
@@ -158,19 +202,6 @@ export const acceptOrder = async (req: Request, res: Response, next: NextFunctio
       return updated;
     });
 
-    if (updatedOrder.student?.mobileNumber) {
-      try {
-        await sendNotification({
-          orderId: updatedOrder.id,
-          channel: 'SMS',
-          to: updatedOrder.student.mobileNumber,
-          message: `Your laundry bag #${updatedOrder.bagNumber} (Order: ${updatedOrder.orderCode}) has been received and is now being processed.`,
-        });
-      } catch (notifyErr) {
-        console.error('Failed to send acceptance notification:', notifyErr);
-      }
-    }
-
     res.status(200).json({ order: updatedOrder });
   } catch (error) {
     next(error);
@@ -203,6 +234,13 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
 
     if (!staffId) {
       const error = new Error('Unauthorized: Staff ID not found in token') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const staff = await prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff || !staff.active) {
+      const error = new Error('Unauthorized: Staff record not found or inactive') as AppError;
       error.status = 401;
       throw error;
     }
@@ -301,19 +339,6 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
         return updated;
       });
 
-      if (updatedOrder.student?.mobileNumber) {
-        try {
-          await sendNotification({
-            orderId: updatedOrder.id,
-            channel: 'SMS',
-            to: updatedOrder.student.mobileNumber,
-            message: `Your laundry bag #${updatedOrder.bagNumber} (Order: ${updatedOrder.orderCode}) is ready for pickup. Your collection OTP is ${plainOtp}.`,
-          });
-        } catch (notifyErr) {
-          console.error('Failed to send ready-for-pickup notification:', notifyErr);
-        }
-      }
-
       return res.status(200).json({
         order: updatedOrder,
         collectionOtp: plainOtp,
@@ -338,6 +363,13 @@ export const bulkUpdateOrderStatus = async (req: Request, res: Response, next: N
 
     if (!staffId) {
       const error = new Error('Unauthorized: Staff ID not found in token') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const staff = await prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff || !staff.active) {
+      const error = new Error('Unauthorized: Staff record not found or inactive') as AppError;
       error.status = 401;
       throw error;
     }
@@ -481,34 +513,32 @@ export const bulkUpdateOrderStatus = async (req: Request, res: Response, next: N
 
 export const searchOrders = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const q = req.query.q as string;
+    const q = req.query.q as string | undefined;
+    const trimmedQuery = typeof q === 'string' ? q.trim() : '';
 
-    if (!q || typeof q !== 'string' || q.trim() === '') {
-      const error = new Error('Query parameter "q" is required and cannot be empty') as AppError;
-      error.status = 400;
-      throw error;
+    const whereClause: any = {
+      status: 'READY',
+    };
+
+    if (trimmedQuery.length > 0) {
+      whereClause.OR = [
+        { bagNumber: { contains: trimmedQuery, mode: 'insensitive' } },
+        { orderCode: { contains: trimmedQuery, mode: 'insensitive' } },
+        {
+          student: {
+            collegeId: { contains: trimmedQuery, mode: 'insensitive' },
+          },
+        },
+        {
+          student: {
+            mobileNumber: { contains: trimmedQuery },
+          },
+        },
+      ];
     }
 
-    const trimmedQuery = q.trim();
-
     const orders = await prisma.order.findMany({
-      where: {
-        status: 'READY',
-        OR: [
-          { bagNumber: { contains: trimmedQuery, mode: 'insensitive' } },
-          { orderCode: { contains: trimmedQuery, mode: 'insensitive' } },
-          {
-            student: {
-              collegeId: { contains: trimmedQuery, mode: 'insensitive' },
-            },
-          },
-          {
-            student: {
-              mobileNumber: { contains: trimmedQuery },
-            },
-          },
-        ],
-      },
+      where: whereClause,
       select: {
         id: true,
         orderCode: true,
@@ -522,6 +552,9 @@ export const searchOrders = async (req: Request, res: Response, next: NextFuncti
             email: true,
           },
         },
+      },
+      orderBy: {
+        actualReadyAt: 'desc',
       },
     });
 
@@ -553,6 +586,13 @@ export const collectOrder = async (req: Request, res: Response, next: NextFuncti
 
     if (!staffId) {
       const error = new Error('Unauthorized: Staff ID not found in token') as AppError;
+      error.status = 401;
+      throw error;
+    }
+
+    const staff = await prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff || !staff.active) {
+      const error = new Error('Unauthorized: Staff record not found or inactive') as AppError;
       error.status = 401;
       throw error;
     }
@@ -678,3 +718,5 @@ export const collectOrder = async (req: Request, res: Response, next: NextFuncti
     next(error);
   }
 };
+
+

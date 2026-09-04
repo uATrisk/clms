@@ -1,7 +1,7 @@
 # College Laundry Management System (CLMS)
 
 ## Project Summary
-CLMS is a registration-free web application designed to replace a manual, untracked college laundry process with a transparent, trackable, and verifiable digital system. It connects students, laundry staff, and the collection center by utilizing a combination of a pre-assigned Bag Number and a Mobile Number to establish identity, completely eliminating the need for app installs, student account creation, or QR/hardware scanners.
+CLMS is a registration-free web application designed to replace a manual, untracked college laundry process with a transparent, trackable, and verifiable digital system. It connects students, laundry staff, and the collection center by utilizing a combination of a pre-assigned Bag Number (auto-prefixed with `B-` for male and `G-` for female based on student gender) and a Mobile Number to establish identity, completely eliminating the need for app installs, student account creation, or QR/hardware scanners.
 
 ## Tech Stack
 - **Frontend:** React.js (Vite), TypeScript, Tailwind CSS, TanStack Query, React Router v7, React Hook Form + Zod, @react-oauth/google, axios, clsx, tailwind-merge, shadcn/ui, lucide-react.
@@ -9,7 +9,6 @@ CLMS is a registration-free web application designed to replace a manual, untrac
 - **Database:** PostgreSQL.
 - **ORM:** Prisma.
 - **Authentication:** Google Identity Services (frontend) + `google-auth-library` (backend) for students (@rishihood.edu.in only); JWT (JSON Web Token) + bcrypt for staff/admin.
-- **Notifications/SMS:** Twilio, MSG91, or Fast2SMS.
 - **Storage:** Cloudinary or AWS S3 (for complaint photo evidence).
 - **Hosting (Target):** Vercel/Netlify for frontend, Render/Railway for backend, Supabase/Railway for managed Postgres.
 
@@ -53,3 +52,4 @@ CLMS is a registration-free web application designed to replace a manual, untrac
 2. **Mandatory Audit Trails:** EVERY change in order status MUST log a record to the `status_history` table for complete tracking.
 3. **Hardware Independence:** No QR code, barcode, RFID, or dedicated scanning hardware dependencies in v1. Staff access the dashboard via standard web browsers.
 4. **Secure Handover:** A collection OTP (or Bag+Mobile verification loop) is strictly required before any laundry can be marked as `COLLECTED`.
+5. **Gender-Prefixed Bags:** Bag numbers are auto-prefixed with `B-` (male) or `G-` (female) based on the student's selected gender on profile completion.

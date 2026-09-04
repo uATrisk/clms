@@ -47,12 +47,6 @@ enum ComplaintStatus {
   ESCALATED
 }
 
-enum NotificationChannel {
-  SMS
-  WHATSAPP
-  EMAIL
-}
-
 enum StudentGender {
   MALE
   FEMALE
@@ -111,9 +105,9 @@ model Order {
   assignedWasher    Staff?            @relation("AssignedWasher", fields: [assignedWasherId], references: [id])
   complaints        Complaint[]
   statusHistory     StatusHistory[]
-  notifications     NotificationLog[]
 
   @@index([bagNumber])
+  @@index([status, submittedAt])
   @@map("orders")
 }
 
@@ -169,20 +163,6 @@ model StatusHistory {
   changedBy        Staff?       @relation("StatusChanger", fields: [changedById], references: [id])
 
   @@map("status_history")
-}
-
-model NotificationLog {
-  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId          String              @map("order_id") @db.Uuid
-  channel          NotificationChannel
-  message          String              @db.Text
-  sentAt           DateTime            @default(now()) @map("sent_at")
-  deliveryStatus   String              @map("delivery_status")
-
-  // Relations
-  order            Order               @relation(fields: [orderId], references: [id])
-
-  @@map("notifications_log")
 }
 
 model Announcement {

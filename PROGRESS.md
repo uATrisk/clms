@@ -7,7 +7,7 @@
 ---
 
 ## Current Phase
-**Phase 3: Complaints Module & Notifications Integration** (In Progress)
+**Phase 3: Complaints Module** (In Progress)
 
 ---
 
@@ -21,7 +21,6 @@
   - [x] Implement `staff` model
   - [x] Implement `complaints` model
   - [x] Implement `status_history` model
-  - [x] Implement `notifications_log` model
   - [x] Run initial migrations & generate Prisma client
 - [x] **Backend Core & Auth API**
   - [x] Set up Express + TypeScript boilerplate with error handling & logging
@@ -81,7 +80,7 @@
 
 ---
 
-### Phase 3: Complaints Module & Notifications Integration
+### Phase 3: Complaints Module
 - [x] **Complaints System**
   - [x] Public complaint submission endpoint (`POST /api/orders/:orderCode/complaint`)
   - [x] Student-facing "Raise Complaint" form with category selection
@@ -89,11 +88,6 @@
   - [x] Admin complaint queue API (`GET /api/admin/complaints`)
   - [x] Admin complaint resolution endpoint (`PATCH /api/admin/complaints/:id`)
   - [x] Admin complaint management UI tab with status filters, audit tracking, and resolution modal
-- [ ] **Notifications Service**
-  - [ ] Pluggable SMS/Notification service adapter (Twilio / MSG91 / Fast2SMS)
-  - [ ] Notification triggers on order submission, acceptance, delay, and ready for pickup
-  - [ ] OTP dispatch mechanism via SMS
-  - [ ] `notifications_log` logging for all outbound alerts
 
 ---
 

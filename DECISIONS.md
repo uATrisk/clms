@@ -389,5 +389,29 @@ Switched the primary database provider from Supabase to Neon PostgreSQL.
 ### Status
 Accepted
 
+---
+
+## [2026-09-05] ADR 020: Permanent Removal of Notification Logging & SMS Infrastructure
+
+### Context
+Earlier project specifications (ADR 001, ADR 002, and ADR 009) planned for an external SMS notification integration (e.g. Twilio, MSG91, or Fast2SMS) for order status updates and collection OTP delivery, along with a database audit table (`notifications_log`) and enum (`NotificationChannel`). In practice, student tracking is directly handled on-demand via the web application using Google-authenticated active order views and the `/track` interface. Maintaining stubbed notification services, database relations, and unused tables adds unnecessary complexity and maintenance overhead.
+
+### Decision
+We have completely removed the notification logging and SMS dispatch feature from the codebase:
+1. **Service Removal:** Deleted `backend/src/services/notification-service.ts` entirely.
+2. **Controller Call Sites:** Removed all non-blocking `sendNotification` call sites and imports from `backend/src/controllers/staff-controller.ts` (accept order and mark ready flows).
+3. **Database Schema:** Removed the `notifications_log` model, the `NotificationChannel` enum, and the `notifications` relation on the `Order` model in `backend/prisma/schema.prisma`.
+4. **Seed Clean-Up:** Removed `NotificationChannel` and `notificationLog` operations from `backend/prisma/seed.ts`.
+5. **Superseded Decisions:** This ADR supersedes the notification and SMS aspects of ADR 001, ADR 002, and ADR 009. The previous ADRs are preserved in this log for historical accuracy, with this entry recording their reversal.
+
+### Rationale
+- **User Decision:** Notifications were deemed unnecessary for the v1 system workflow.
+- **Codebase Simplification:** Eliminates orphaned schema models, dead code paths, and stubbed services.
+- **Zero Impact on Core Functionality:** Order status transitions, audit logging via `status_history`, and OTP generation/verification operate completely independently of notification dispatch.
+
+### Status
+Accepted
+
+
 
 

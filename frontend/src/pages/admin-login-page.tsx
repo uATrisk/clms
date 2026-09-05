@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useStaffAuth } from '../contexts/staff-auth-context';
-import { ShieldCheck, AlertCircle, Lock, User } from 'lucide-react';
+import { AlertCircle, Lock, User } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -55,20 +55,15 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 p-6 sm:p-8">
         {/* Header */}
-        <div className="bg-slate-900 p-8 text-center text-white">
-          <div className="mx-auto bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <ShieldCheck className="w-8 h-8 text-blue-400" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Admin Portal Login</h1>
-          <p className="text-slate-400 mt-2 text-sm">
-            Rishihood University CLMS Admin Access
-          </p>
+        <div className="text-center flex flex-col items-center mb-6">
+          <img src="/logo.png" alt="Rishihood Laundry" className="h-14 w-auto object-contain mb-4" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Admin Portal Login</h1>
         </div>
 
         {/* Content */}
-        <div className="p-6 sm:p-8">
+        <div>
           {error && (
             <div className="w-full mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-sm">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />

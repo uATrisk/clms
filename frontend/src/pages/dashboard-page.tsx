@@ -11,7 +11,8 @@ import {
   AlertCircle,
   KeyRound,
   CalendarClock,
-  Loader2
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -55,33 +56,29 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col gap-10 w-full animate-fade-in">
 
         {/* Welcome Banner */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-maroon-800 via-maroon-700 to-maroon-900 shadow-xl border border-maroon-600/50">
-          {/* Abstract geometric background elements */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="diagonal-stripes" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                  <rect width="20" height="40" fill="currentColor" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#diagonal-stripes)" className="text-amber-100" />
-            </svg>
-          </div>
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-maroon-700 to-maroon-800 shadow-xl border border-maroon-600/50">
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-maroon-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div className="absolute -right-6 -bottom-12 opacity-[0.15] text-amber-100 pointer-events-none">
-            <Inbox className="w-56 h-56 transform -rotate-12" strokeWidth={1} />
+          {/* Sparkles */}
+          <div className="absolute top-4 right-8 text-white/20">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div className="absolute bottom-4 right-24 text-white/10">
+            <Sparkles className="w-4 h-4" />
           </div>
 
-          <div className="relative z-10 p-8 sm:p-12 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex-1 space-y-3">
-              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-cream-50 leading-tight">
+          <div className="relative z-10 px-6 py-6 sm:px-10 sm:py-7 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex-1 space-y-3 min-w-0">
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-cream-50 leading-tight break-words">
                 Welcome back, {user?.name?.split(' ')[0] || 'Student'}!
               </h1>
               <p className="text-cream-200/90 text-sm sm:text-base font-medium max-w-xl">
                 We take care of your laundry so you can focus on what matters most.
               </p>
+            </div>
+            <div className="hidden sm:block shrink-0">
+              <img src="/laundry-illustration.svg" alt="Laundry Illustration" className="h-24 sm:h-28 w-auto object-contain" />
             </div>
           </div>
         </section>
@@ -89,7 +86,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
 
           {/* Main Column: Active Order Status */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="lg:col-span-8 flex flex-col gap-6 min-w-0">
             <h2 className="font-serif text-2xl font-bold text-maroon-900 border-b border-cream-200 pb-3">
               Your Laundry Bag Status
             </h2>
@@ -101,17 +98,17 @@ export default function DashboardPage() {
               </div>
             ) : order ? (
               <div className="bg-white rounded-2xl shadow-sm border border-cream-200 overflow-hidden transition-all duration-300">
-                <div className="bg-gradient-to-r from-cream-100 to-white px-6 py-5 border-b border-cream-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 bg-maroon-50 text-maroon-800 rounded-xl flex items-center justify-center font-bold font-serif text-xl border border-maroon-100 shadow-inner">
-                      #{order.bagNumber}
+                <div className="bg-gradient-to-r from-cream-100 to-white px-4 sm:px-6 py-5 border-b border-cream-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="h-12 min-w-12 px-2.5 bg-maroon-50 text-maroon-800 rounded-xl flex items-center justify-center font-bold font-serif text-lg border border-maroon-100 shadow-inner shrink-0">
+                      {order.bagNumber}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Active Request</p>
-                      <p className="font-medium text-gray-900 tracking-tight text-base mt-0.5">{order.orderCode}</p>
+                      <p className="font-medium text-gray-900 tracking-tight text-base mt-0.5 truncate">{order.orderCode}</p>
                     </div>
                   </div>
-                  <div className="auto-cols-max">
+                  <div className="shrink-0">
                     <span className={cx(
                       "px-4 py-2 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wide border shadow-xs inline-flex items-center gap-1.5",
                       isDelayed ? "bg-red-50 text-red-700 border-red-200"
@@ -124,14 +121,14 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* Details: OTP / Expected Ready / In-progress */}
                   {order.status === 'READY' && order.collectionOtp ? (
-                    <div className="p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
+                    <div className="p-4 sm:p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
                       <div className="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center shrink-0">
                         <KeyRound className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-bold text-gray-900">Collection OTP</h3>
                         <p className="text-lg font-bold tracking-widest text-green-700 mt-1">{order.collectionOtp}</p>
                         <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
@@ -140,11 +137,11 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ) : order.expectedReadyAt ? (
-                    <div className="p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
+                    <div className="p-4 sm:p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
                       <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
                         <CalendarClock className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-bold text-gray-900">Expected Ready</h3>
                         <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
                           {new Date(order.expectedReadyAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -152,11 +149,11 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
-                      <div className="w-12 h-12 bg-cream-100 text-maroon-400 rounded-xl flex items-center justify-center shrink-0">
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                    <div className="p-4 sm:p-5 bg-white rounded-2xl border border-cream-200 flex items-start gap-4">
+                      <div className="w-12 h-12 bg-cream-100 text-maroon-600 rounded-xl flex items-center justify-center shrink-0">
+                        <Clock className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-bold text-gray-900">In Progress</h3>
                         <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
                           Your laundry request is currently being processed.
@@ -168,16 +165,16 @@ export default function DashboardPage() {
                   <div className="flex justify-center mt-6 pt-5 border-t border-cream-100">
                     <Link
                       to={`/track/${order.orderCode}`}
-                      className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-cream-300 rounded-xl text-maroon-700 font-medium hover:bg-cream-50 hover:border-maroon-200 transition-all shadow-sm hover:shadow active:scale-95 group focus:outline-none focus:ring-2 focus:ring-maroon-500/30 text-sm"
+                      className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 bg-white border border-cream-300 rounded-xl text-maroon-700 font-medium hover:bg-cream-50 hover:border-maroon-200 transition-all shadow-sm hover:shadow active:scale-95 group focus:outline-none focus:ring-2 focus:ring-maroon-500/30 text-xs sm:text-sm w-full sm:w-auto text-center"
                     >
-                      View Order Tracking & Timeline
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <span>View Order Tracking & Timeline</span>
+                      <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl p-8 sm:p-12 shadow-sm border border-cream-200 text-center flex flex-col items-center gap-5 transition-all w-full">
+              <div className="bg-white rounded-2xl p-8 sm:p-12 shadow-sm border border-cream-200 text-center flex flex-col items-center justify-center gap-5 transition-all w-full h-full">
                 <div className="w-20 h-20 bg-cream-100 rounded-full flex items-center justify-center text-maroon-300 mb-2 ring-8 ring-cream-50">
                   <Inbox className="w-10 h-10" />
                 </div>
@@ -199,7 +196,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column: What would you like to do action cards */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="lg:col-span-4 flex flex-col gap-6 min-w-0">
             <h2 className="font-serif text-2xl font-bold text-maroon-900 border-b border-cream-200 pb-3">
               What would you like to do?
             </h2>

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../contexts/auth-context';
+import { CampusFooter } from '../components/campus-footer';
 
 type OrderStatus =
   | 'SUBMITTED'
@@ -259,8 +260,9 @@ export default function TrackDetailsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-cream-50 flex flex-col items-center py-8 px-4 sm:px-6">
-      <div className="w-full max-w-md bg-white border border-cream-200 rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+    <div className="flex-1 bg-cream-50 flex flex-col">
+      <div className="flex-1 flex flex-col items-center py-8 px-4 sm:px-6">
+        <div className="w-full max-w-md bg-white border border-cream-200 rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between text-maroon-700 mb-2">
           <Link
             to="/"
@@ -278,7 +280,7 @@ export default function TrackDetailsPage() {
         </div>
 
         {/* Success Alert Banner */}
-        {successMessage && (
+        {false && successMessage && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start justify-between shadow-sm animate-fade-in">
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -593,6 +595,8 @@ export default function TrackDetailsPage() {
           </div>
         </div>
       )}
+      </div>
+      <CampusFooter />
     </div>
   );
 }

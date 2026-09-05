@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useStaffAuth } from '../contexts/staff-auth-context';
 import {
+  SEARCH_FILTER_OPTIONS,
+  getSearchPlaceholder,
+  filterOrders,
+} from '../utils/search-utils';
+import type { SearchFilterType } from '../utils/search-utils';
+import {
   Search,
   LogOut,
-  ShieldCheck,
   PackageCheck,
-  CheckCircle2,
   AlertCircle,
   Clock,
   User,
-  Hash,
   X,
   Sparkles,
   ShoppingBag,
@@ -39,10 +42,23 @@ export default function StaffCollectionPage() {
   const location = useLocation();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
-  const [searchResults, setSearchResults] = useState<ReadyOrder[]>([]);
+  const [filterType, setFilterType] = useState<SearchFilterType>('all');
+  const [allOrders, setAllOrders] = useState<ReadyOrder[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+
+  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+  const avatarDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target as Node)) {
+        setIsAvatarOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Collect Modal State
   const [collectModalOrder, setCollectModalOrder] = useState<ReadyOrder | null>(null);
@@ -59,36 +75,41 @@ export default function StaffCollectionPage() {
     message: string;
   } | null>(null);
 
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      setSearchError('Please enter a search query (Bag #, Student ID, Mobile, or Order Code).');
-      return;
-    }
-
+  const fetchOrders = async (query = '') => {
     setSearchError(null);
     setIsSearching(true);
-    setNotificationBanner(null);
 
     try {
       const response = await axios.get(`${API_BASE_URL}/staff/orders/search`, {
-        params: { q: trimmed },
+        params: query ? { q: query } : {},
         headers: { Authorization: `Bearer ${staffToken}` },
       });
 
       const orders = response.data?.orders || [];
-      setSearchResults(orders);
-      setHasSearched(true);
+      setAllOrders(orders);
     } catch (err: any) {
       const msg =
         err.response?.data?.error?.message ||
         err.response?.data?.message ||
-        'Failed to perform search. Please try again.';
+        'Failed to fetch ready orders. Please try again.';
       setSearchError(msg);
     } finally {
       setIsSearching(false);
     }
+  };
+
+  useEffect(() => {
+    if (staffToken) {
+      fetchOrders();
+    }
+  }, [staffToken]);
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setNotificationBanner(null);
+    // Refresh the full list to ensure we have the latest orders,
+    // since we use robust client-side filtering that handles prefix parsing better than the backend.
+    await fetchOrders();
   };
 
   const handleOpenCollectModal = (order: ReadyOrder) => {
@@ -146,7 +167,7 @@ export default function StaffCollectionPage() {
       const orderCode = collectedOrder?.orderCode || collectModalOrder.orderCode;
 
       // Remove the collected order from current search results
-      setSearchResults((prev) => prev.filter((o) => o.id !== collectModalOrder.id));
+      setAllOrders((prev) => prev.filter((o) => o.id !== collectModalOrder.id));
 
       // Close modal
       setCollectModalOrder(null);
@@ -188,19 +209,21 @@ export default function StaffCollectionPage() {
     }
   };
 
+  const filteredOrders = filterOrders(allOrders, searchQuery, filterType);
+
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col font-sans">
       {/* Staff Top Navigation */}
-      <header className="bg-maroon-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-            <ShieldCheck className="w-5 h-5" />
+      <header className="bg-maroon-700 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
+        <Link
+          to="/staff/collection"
+          className="flex items-center group focus:outline-none"
+        >
+          <div className="bg-white rounded-xl p-1.5 flex items-center shadow-sm">
+            <img src="/logo.png" alt="Rishihood Laundry" className="h-7 w-auto object-contain hidden sm:block" />
+            <img src="/icon.png" alt="Rishihood Laundry" className="h-7 w-auto object-contain sm:hidden" />
           </div>
-          <div>
-            <h1 className="font-serif text-sm sm:text-base font-bold tracking-tight">CLMS Collection Desk</h1>
-            <p className="text-[11px] text-slate-400">Order Verification &amp; Handover</p>
-          </div>
-        </div>
+        </Link>
 
         {/* View Switcher Tabs */}
         <div className="hidden md:flex items-center gap-1.5 bg-maroon-800/80 p-1 rounded-xl border border-maroon-700/60">
@@ -238,24 +261,48 @@ export default function StaffCollectionPage() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-medium text-slate-200">
-              {staffUser?.name || staffUser?.username}
-            </p>
-            <span className="text-[10px] bg-maroon-800 text-emerald-400 px-2 py-0.5 rounded uppercase font-semibold tracking-wider">
-              {staffUser?.role}
-            </span>
-          </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative" ref={avatarDropdownRef}>
+            <button
+              onClick={() => setIsAvatarOpen(!isAvatarOpen)}
+              className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-amber-300/50 transition-all focus:outline-none cursor-pointer"
+              aria-expanded={isAvatarOpen}
+              aria-label="User Menu"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cream-100 text-maroon-800 border-2 border-amber-300/40 flex items-center justify-center font-serif font-bold text-sm sm:text-base shadow-sm hover:scale-105 transition-transform">
+                {staffUser?.name ? staffUser.name[0].toUpperCase() : <User className="w-5 h-5" />}
+              </div>
+            </button>
 
-          <button
-            onClick={staffLogout}
-            title="Sign Out"
-            className="flex items-center gap-1.5 text-xs bg-maroon-800 hover:bg-red-900/40 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded-lg border border-maroon-700 hover:border-red-700 transition cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
+            {/* Dropdown Menu */}
+            {isAvatarOpen && (
+              <div className="absolute right-0 mt-2 w-56 sm:w-60 bg-white rounded-2xl shadow-2xl border border-maroon-100 py-2 z-50 animate-fade-in origin-top-right text-gray-800">
+                <div className="px-4 py-3 bg-gradient-to-b from-cream-100/60 to-transparent border-b border-cream-200/60">
+                  <p className="text-sm font-semibold text-gray-900 truncate font-serif">
+                    {staffUser?.name || staffUser?.username}
+                  </p>
+                  <div className="mt-1">
+                    <span className="text-[10px] font-semibold tracking-wider uppercase text-maroon-700 bg-maroon-50 border border-maroon-200 px-2 py-0.5 rounded-md inline-block">
+                      {staffUser?.role}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setIsAvatarOpen(false);
+                      staffLogout();
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -286,20 +333,12 @@ export default function StaffCollectionPage() {
       {/* Main Content Container */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
         {/* Flash Notification Banner */}
-        {notificationBanner && (
+        {notificationBanner && notificationBanner.type !== 'success' && (
           <div
-            className={`mb-6 p-4 rounded-xl border flex items-start justify-between gap-3 shadow-xs animate-in fade-in slide-in-from-top-2 ${
-              notificationBanner.type === 'success'
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                : 'bg-red-50 border-red-200 text-red-900'
-            }`}
+            className="mb-6 p-4 rounded-xl border flex items-start justify-between gap-3 shadow-xs animate-in fade-in slide-in-from-top-2 bg-red-50 border-red-200 text-red-900"
           >
             <div className="flex items-start gap-3">
-              {notificationBanner.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              ) : (
-                <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              )}
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-semibold text-sm">{notificationBanner.title}</h3>
                 <p className="text-xs mt-0.5 opacity-90">{notificationBanner.message}</p>
@@ -315,44 +354,66 @@ export default function StaffCollectionPage() {
         )}
 
         {/* Search Card */}
-        <div className="bg-white rounded-2xl border border-cream-200 shadow-xs p-5 sm:p-6 mb-6">
-          <div className="mb-4">
+        <div className="bg-white rounded-2xl border border-cream-200 shadow-xs p-4 sm:p-6 mb-6">
+          <div className="mb-3">
             <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900">
               Lookup Ready Orders
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Search by Bag Number, Student College ID, Mobile Number, or Order Code to verify student collection.
-            </p>
           </div>
 
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2.5">
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="e.g. BAG-102, 2024RU101, 9876543210, LN-ABCD-1234"
-                className="w-full pl-10 pr-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 text-slate-900 transition"
+                placeholder={getSearchPlaceholder(filterType)}
+                className="w-full pl-10 pr-9 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 text-slate-900 transition"
               />
-            </div>
-            <button
-              type="submit"
-              disabled={isSearching}
-              className="px-6 py-2.5 bg-maroon-700 hover:bg-maroon-800 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-xs shadow-maroon-700/10"
-            >
-              {isSearching ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Searching...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="w-4 h-4" />
-                  <span>Search</span>
-                </>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               )}
-            </button>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as SearchFilterType)}
+                className="flex-1 sm:flex-none bg-cream-50 border border-cream-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 py-2.5 pl-3 pr-8 focus:outline-hidden focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 appearance-none cursor-pointer"
+                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundPosition: "right 0.6rem center", backgroundRepeat: "no-repeat", backgroundSize: "1em 1em" }}
+              >
+                {SEARCH_FILTER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="px-6 py-2.5 bg-maroon-700 hover:bg-maroon-800 disabled:opacity-50 text-white text-xs sm:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-xs shadow-maroon-700/10 active:scale-[0.98]"
+              >
+                {isSearching ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Searching...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    <span>Search</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
           {searchError && (
@@ -365,40 +426,45 @@ export default function StaffCollectionPage() {
 
         {/* Results Section */}
         <div className="flex-1">
-          {!hasSearched ? (
+          {isSearching && allOrders.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-cream-200 p-8 sm:p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center">
+              <div className="w-8 h-8 border-4 border-maroon-700/20 border-t-maroon-700 rounded-full animate-spin mb-3"></div>
+              <p className="text-sm font-medium text-slate-600">Loading ready orders...</p>
+            </div>
+          ) : allOrders.length === 0 ? (
             <div className="bg-white rounded-2xl border border-cream-200 p-8 sm:p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center">
               <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
                 <ShoppingBag className="w-7 h-7" />
               </div>
               <h3 className="font-serif text-base font-semibold text-slate-800">
-                Ready to Process Collections
+                No Orders Ready for Collection
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 max-w-md mt-1">
-                Enter a search term above to locate customer orders in <span className="font-semibold text-emerald-600">READY</span> status awaiting pickup.
+                There are currently no orders in <span className="font-semibold text-emerald-600">READY</span> status awaiting pickup.
               </p>
             </div>
-          ) : searchResults.length === 0 ? (
+          ) : filteredOrders.length === 0 ? (
             <div className="bg-white rounded-2xl border border-cream-200 p-8 sm:p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center">
               <div className="w-12 h-12 rounded-2xl bg-cream-100 text-slate-400 flex items-center justify-center mb-3">
                 <Search className="w-6 h-6" />
               </div>
               <h3 className="font-serif text-sm sm:text-base font-semibold text-slate-700">
-                No Ready Orders Found
+                No Matching Orders Found
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 max-w-md mt-1">
-                No orders in <strong>READY</strong> status matched "{searchQuery}". The order may still be processing or has already been collected.
+                No orders in <strong>READY</strong> status matched "{searchQuery}". Try adjusting your filter or search query.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  {searchResults.length} Ready Order{searchResults.length === 1 ? '' : 's'} Found
+                  {filteredOrders.length} Ready Order{filteredOrders.length === 1 ? '' : 's'} {searchQuery.trim() ? 'Matched' : 'Awaiting Collection'}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                {searchResults.map((order) => (
+                {filteredOrders.map((order) => (
                   <div
                     key={order.id}
                     className="bg-white rounded-2xl border border-cream-200 shadow-xs hover:border-emerald-300 transition p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -411,9 +477,8 @@ export default function StaffCollectionPage() {
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800">
                           READY FOR PICKUP
                         </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-cream-100 text-slate-700 border border-cream-200">
-                          <Hash className="w-3 h-3 text-slate-500" />
-                          Bag #{order.bagNumber}
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-cream-100 text-slate-700 border border-cream-200">
+                          {order.bagNumber}
                         </span>
                       </div>
 
@@ -458,7 +523,7 @@ export default function StaffCollectionPage() {
 
       {/* Collect / Handover Verification Modal */}
       {collectModalOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-maroon-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-cream-200 flex flex-col gap-4 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-cream-100">
               <div className="flex items-center gap-2.5">
@@ -470,7 +535,7 @@ export default function StaffCollectionPage() {
                     Handover Verification
                   </h3>
                   <p className="text-[11px] text-slate-500 font-mono">
-                    {collectModalOrder.orderCode} (Bag #{collectModalOrder.bagNumber})
+                    {collectModalOrder.orderCode} ({collectModalOrder.bagNumber})
                   </p>
                 </div>
               </div>

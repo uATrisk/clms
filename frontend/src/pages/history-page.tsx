@@ -213,7 +213,7 @@ export default function HistoryPage() {
                               {order.orderCode}
                             </span>
                             <span className="text-xs bg-cream-100 text-maroon-900 border border-cream-200 px-2 py-0.5 rounded-md font-semibold">
-                              Bag #{order.bagNumber}
+                              {order.bagNumber}
                             </span>
                           </div>
                           <p className="text-xs text-gray-400">

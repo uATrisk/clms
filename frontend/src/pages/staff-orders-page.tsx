@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useStaffAuth } from '../contexts/staff-auth-context';
 import {
+  SEARCH_FILTER_OPTIONS,
+  getSearchPlaceholder,
+  filterOrders,
+} from '../utils/search-utils';
+import type { SearchFilterType } from '../utils/search-utils';
+import {
   LogOut,
   RefreshCw,
+  Search,
   AlertCircle,
   Inbox,
-  ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   Clock,
@@ -17,7 +23,9 @@ import {
   Layers,
   X,
   Sparkles,
-  KeyRound,
+  User,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -48,6 +56,26 @@ export default function StaffOrdersPage() {
   const location = useLocation();
 
   const [activeTab, setActiveTab] = useState<'queue' | 'active'>('queue');
+  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+  const avatarDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target as Node)) {
+        setIsAvatarOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const [queuePage, setQueuePage] = useState(1);
+  const queueLimit = 20;
+
+  const [queueSearchQuery, setQueueSearchQuery] = useState('');
+  const [queueFilterType, setQueueFilterType] = useState<SearchFilterType>('all');
+  const [activeSearchQuery, setActiveSearchQuery] = useState('');
+  const [activeFilterType, setActiveFilterType] = useState<SearchFilterType>('all');
 
   // Modals & form state
   const [acceptModalOrder, setAcceptModalOrder] = useState<QueueOrder | null>(null);
@@ -57,13 +85,6 @@ export default function StaffOrdersPage() {
   const [etaModalOrder, setEtaModalOrder] = useState<QueueOrder | null>(null);
   const [etaDateInput, setEtaDateInput] = useState<string>('');
   const [etaError, setEtaError] = useState<string | null>(null);
-
-  const [readyOtpModal, setReadyOtpModal] = useState<{
-    orderCode: string;
-    bagNumber: string;
-    otp: string;
-    studentName?: string;
-  } | null>(null);
 
   const [notificationBanner, setNotificationBanner] = useState<{
     type: 'success' | 'warning' | 'error';
@@ -98,15 +119,19 @@ export default function StaffOrdersPage() {
 
   // 1. Fetch Queue (SUBMITTED orders)
   const queueQuery = useQuery({
-    queryKey: ['staff-orders-queue'],
+    queryKey: ['staff-orders-queue', queuePage],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/staff/orders/queue`, {
+        params: { page: queuePage, limit: queueLimit },
         headers: { Authorization: `Bearer ${staffToken}` },
       });
       if (Array.isArray(response.data)) {
-        return response.data as QueueOrder[];
+        return { orders: response.data as QueueOrder[], pagination: null };
       }
-      return (response.data?.orders || []) as QueueOrder[];
+      return {
+        orders: (response.data?.orders || []) as QueueOrder[],
+        pagination: response.data?.pagination || null
+      };
     },
     enabled: !!staffToken,
     refetchInterval: 10000,
@@ -151,13 +176,13 @@ export default function StaffOrdersPage() {
         setNotificationBanner({
           type: 'warning',
           title: 'Order Accepted with Count Mismatch!',
-          message: `Order ${updatedOrder.orderCode} (Bag ${updatedOrder.bagNumber}) has been moved to Active Orders. Verified count (${updatedOrder.verifiedCount}) differs from student's self-reported count (${updatedOrder.selfReportedCount}).`,
+          message: `Order ${updatedOrder.orderCode} (${updatedOrder.bagNumber}) has been moved to Active Orders. Verified count (${updatedOrder.verifiedCount}) differs from student's self-reported count (${updatedOrder.selfReportedCount}).`,
         });
       } else {
         setNotificationBanner({
           type: 'success',
           title: 'Order Accepted Successfully',
-          message: `Order ${updatedOrder?.orderCode || ''} (Bag ${updatedOrder?.bagNumber || ''}) is now in processing.`,
+          message: `Order ${updatedOrder?.orderCode || ''} (${updatedOrder?.bagNumber || ''}) is now in processing.`,
         });
       }
     },
@@ -215,16 +240,12 @@ export default function StaffOrdersPage() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['staff-orders-active'] });
       const order = activeOrders.find((o) => o.id === variables.id);
-      setReadyOtpModal({
-        orderCode: data?.order?.orderCode || order?.orderCode || '',
-        bagNumber: data?.order?.bagNumber || order?.bagNumber || '',
-        otp: data?.collectionOtp || '—',
-        studentName: data?.order?.student?.name || order?.student?.name,
-      });
+      const code = data?.order?.orderCode || order?.orderCode || '';
+      const bag = data?.order?.bagNumber || order?.bagNumber || '';
       setNotificationBanner({
         type: 'success',
         title: 'Order Marked Ready for Pickup',
-        message: `Order ${data?.order?.orderCode || ''} is now ready. Collection OTP generated: ${data?.collectionOtp}`,
+        message: `Order ${code} (${bag}) is now marked ready.`,
       });
     },
     onError: (err: any) => {
@@ -283,8 +304,12 @@ export default function StaffOrdersPage() {
     bulkReadyMutation.mutate(ids);
   };
 
-  const submittedOrders = queueQuery.data || [];
+  const submittedOrders = queueQuery.data?.orders || [];
+  const queuePagination = queueQuery.data?.pagination;
   const activeOrders = activeQuery.data || [];
+
+  const filteredSubmittedOrders = filterOrders(submittedOrders, queueSearchQuery, queueFilterType);
+  const filteredActiveOrders = filterOrders(activeOrders, activeSearchQuery, activeFilterType);
 
   const handleOpenAcceptModal = (order: QueueOrder) => {
     setAcceptModalOrder(order);
@@ -367,16 +392,16 @@ export default function StaffOrdersPage() {
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col font-sans">
       {/* Staff Top Navigation */}
-      <header className="bg-maroon-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-            <ShieldCheck className="w-5 h-5" />
+      <header className="bg-maroon-700 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
+        <Link
+          to="/staff/orders"
+          className="flex items-center group focus:outline-none"
+        >
+          <div className="bg-white rounded-xl p-1.5 flex items-center shadow-sm">
+            <img src="/logo.png" alt="Rishihood Laundry" className="h-7 w-auto object-contain hidden sm:block" />
+            <img src="/icon.png" alt="Rishihood Laundry" className="h-7 w-auto object-contain sm:hidden" />
           </div>
-          <div>
-            <h1 className="font-serif text-sm sm:text-base font-bold tracking-tight">CLMS Washer Operations</h1>
-            <p className="text-[11px] text-slate-400">Intake &amp; Processing Dashboard</p>
-          </div>
-        </div>
+        </Link>
 
         {/* View Switcher Tabs */}
         <div className="hidden md:flex items-center gap-1.5 bg-maroon-800/80 p-1 rounded-xl border border-maroon-700/60">
@@ -414,24 +439,48 @@ export default function StaffOrdersPage() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-medium text-slate-200">
-              {staffUser?.name || staffUser?.username}
-            </p>
-            <span className="text-[10px] bg-maroon-800 text-emerald-400 px-2 py-0.5 rounded uppercase font-semibold tracking-wider">
-              {staffUser?.role}
-            </span>
-          </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative" ref={avatarDropdownRef}>
+            <button
+              onClick={() => setIsAvatarOpen(!isAvatarOpen)}
+              className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-amber-300/50 transition-all focus:outline-none cursor-pointer"
+              aria-expanded={isAvatarOpen}
+              aria-label="User Menu"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cream-100 text-maroon-800 border-2 border-amber-300/40 flex items-center justify-center font-serif font-bold text-sm sm:text-base shadow-sm hover:scale-105 transition-transform">
+                {staffUser?.name ? staffUser.name[0].toUpperCase() : <User className="w-5 h-5" />}
+              </div>
+            </button>
 
-          <button
-            onClick={staffLogout}
-            title="Sign Out"
-            className="flex items-center gap-1.5 text-xs bg-maroon-800 hover:bg-red-900/40 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded-lg border border-maroon-700 hover:border-red-700 transition cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
+            {/* Dropdown Menu */}
+            {isAvatarOpen && (
+              <div className="absolute right-0 mt-2 w-56 sm:w-60 bg-white rounded-2xl shadow-2xl border border-maroon-100 py-2 z-50 animate-fade-in origin-top-right text-gray-800">
+                <div className="px-4 py-3 bg-gradient-to-b from-cream-100/60 to-transparent border-b border-cream-200/60">
+                  <p className="text-sm font-semibold text-gray-900 truncate font-serif">
+                    {staffUser?.name || staffUser?.username}
+                  </p>
+                  <div className="mt-1">
+                    <span className="text-[10px] font-semibold tracking-wider uppercase text-maroon-700 bg-maroon-50 border border-maroon-200 px-2 py-0.5 rounded-md inline-block">
+                      {staffUser?.role}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setIsAvatarOpen(false);
+                      staffLogout();
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -462,20 +511,16 @@ export default function StaffOrdersPage() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
         {/* Flash Notification Banner */}
-        {notificationBanner && (
+        {notificationBanner && notificationBanner.type !== 'success' && (
           <div
             className={`mb-6 p-4 rounded-xl border flex items-start justify-between gap-3 shadow-xs animate-in fade-in slide-in-from-top-2 ${
-              notificationBanner.type === 'success'
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                : notificationBanner.type === 'warning'
+              notificationBanner.type === 'warning'
                 ? 'bg-amber-50 border-amber-200 text-amber-900'
                 : 'bg-red-50 border-red-200 text-red-900'
             }`}
           >
             <div className="flex items-start gap-3">
-              {notificationBanner.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              ) : notificationBanner.type === 'warning' ? (
+              {notificationBanner.type === 'warning' ? (
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               ) : (
                 <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
@@ -550,11 +595,61 @@ export default function StaffOrdersPage() {
         {/* Tab 1: Incoming Queue (SUBMITTED) */}
         {activeTab === 'queue' && (
           <div>
-            <div className="mb-4">
-              <h2 className="font-serif text-lg font-bold text-slate-900">Submitted Orders Queue</h2>
-              <p className="text-xs text-slate-500">
-                Bags dropped off by students awaiting physical count verification and intake into wash cycle.
-              </p>
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-serif text-lg font-bold text-slate-900">Submitted Orders Queue</h2>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  queueQuery.refetch();
+                }}
+                className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center"
+              >
+                <div className="relative w-full sm:w-56 shrink-0">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={queueSearchQuery}
+                    onChange={(e) => setQueueSearchQuery(e.target.value)}
+                    placeholder={getSearchPlaceholder(queueFilterType)}
+                    className="w-full pl-9 pr-8 py-2 bg-white border border-cream-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 transition"
+                  />
+                  {queueSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setQueueSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <select
+                    value={queueFilterType}
+                    onChange={(e) => setQueueFilterType(e.target.value as SearchFilterType)}
+                    className="flex-1 sm:flex-none bg-white border border-cream-300 rounded-xl text-xs font-semibold text-slate-700 py-2 pl-3 pr-8 focus:outline-hidden focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 appearance-none cursor-pointer"
+                    style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1em 1em" }}
+                  >
+                    {SEARCH_FILTER_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="submit"
+                    className="px-3.5 py-2 bg-maroon-700 hover:bg-maroon-800 text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-xs shadow-maroon-700/10 active:scale-[0.98]"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Search</span>
+                  </button>
+                </div>
+              </form>
             </div>
 
             {queueQuery.isError && (
@@ -584,8 +679,17 @@ export default function StaffOrdersPage() {
                     New student laundry drop-offs will automatically show up here.
                   </p>
                 </div>
+              ) : filteredSubmittedOrders.length === 0 ? (
+                <div className="p-12 text-center text-slate-400">
+                  <Search className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-700">No matching orders</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    No orders match "{queueSearchQuery}". Try a different keyword or clear the search.
+                  </p>
+                </div>
               ) : (
-                <div className="overflow-x-auto">
+                <>
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-cream-50 text-xs uppercase font-semibold text-slate-500 border-b border-cream-200 tracking-wider">
                       <tr>
@@ -597,7 +701,7 @@ export default function StaffOrdersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-cream-200">
-                      {submittedOrders.map((order) => (
+                      {filteredSubmittedOrders.map((order) => (
                         <tr
                           key={order.id}
                           className="hover:bg-cream-50/80 transition-colors"
@@ -608,7 +712,7 @@ export default function StaffOrdersPage() {
                             </div>
                             <div className="mt-1">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-cream-100 text-slate-800 border border-cream-200">
-                                Bag #{order.bagNumber}
+                                {order.bagNumber}
                               </span>
                             </div>
                           </td>
@@ -634,19 +738,101 @@ export default function StaffOrdersPage() {
                           </td>
 
                           <td className="px-5 py-4 text-right whitespace-nowrap">
-                            <button
-                              onClick={() => handleOpenAcceptModal(order)}
-                              className="inline-flex items-center gap-1.5 bg-maroon-700 hover:bg-maroon-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-xs transition cursor-pointer"
-                            >
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              <span>Accept &amp; Count</span>
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleOpenAcceptModal(order)}
+                                className="inline-flex items-center gap-1.5 bg-maroon-700 hover:bg-maroon-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-xs transition cursor-pointer"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>Accept &amp; Count</span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile View for Submitted Orders */}
+                <div className="block md:hidden divide-y divide-cream-100">
+                  {filteredSubmittedOrders.map((order) => (
+                    <div key={order.id} className="p-4 flex flex-col gap-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-mono font-bold text-maroon-700 text-sm">
+                            {order.orderCode}
+                          </div>
+                          <span className="inline-flex items-center px-2 py-0.5 mt-1 rounded text-[11px] font-semibold bg-cream-100 text-slate-800 border border-cream-200">
+                            {order.bagNumber}
+                          </span>
+                        </div>
+                        <div className="text-right flex flex-col items-end">
+                          <span className="bg-cream-100 text-slate-900 font-bold px-2.5 py-1 rounded-md text-xs border border-cream-200">
+                            {order.selfReportedCount} pcs
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-slate-600 bg-cream-50 p-3 rounded-lg border border-cream-100">
+                        <div className="font-semibold text-slate-900">{order.student?.name || 'Student'}</div>
+                        <div className="text-slate-500 overflow-hidden text-ellipsis whitespace-nowrap">{order.student?.email || '—'}</div>
+                        {order.student?.collegeId && (
+                          <div className="text-slate-400 font-mono mt-0.5">ID: {order.student.collegeId}</div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between mt-1 pt-1 border-t border-cream-100">
+                        <div className="text-[11px] text-slate-500 flex flex-col">
+                          <span>Submitted</span>
+                          <span className="font-medium text-slate-700">{formatDateTime(order.submittedAt || order.createdAt)}</span>
+                        </div>
+                        <button
+                          onClick={() => handleOpenAcceptModal(order)}
+                          className="inline-flex items-center justify-center gap-1.5 bg-maroon-700 hover:bg-maroon-800 text-white text-[13px] font-semibold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer shrink-0"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Accept &amp; Count</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {queuePagination && queuePagination.totalPages > 1 && (
+                  <div className="px-5 py-3.5 bg-cream-50/70 border-t border-cream-200/80 flex items-center justify-between gap-4">
+                    <div className="text-xs text-slate-500">
+                      Showing <span className="font-semibold text-slate-800">{(queuePage - 1) * queueLimit + 1}</span> to{' '}
+                      <span className="font-semibold text-slate-800">
+                        {Math.min(queuePage * queueLimit, queuePagination.totalCount)}
+                      </span>{' '}
+                      of <span className="font-semibold text-slate-800">{queuePagination.totalCount}</span> orders
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setQueuePage((p) => Math.max(p - 1, 1))}
+                        disabled={queuePage <= 1 || queueQuery.isFetching}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-cream-300 bg-white text-slate-700 hover:bg-cream-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <span>Prev</span>
+                      </button>
+                      <span className="px-2 text-xs font-medium text-slate-600">
+                        {queuePage} / {queuePagination.totalPages}
+                      </span>
+                      <button
+                        onClick={() => setQueuePage((p) => Math.min(p + 1, queuePagination.totalPages))}
+                        disabled={queuePage >= queuePagination.totalPages || queueQuery.isFetching}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-cream-300 bg-white text-slate-700 hover:bg-cream-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                      >
+                        <span>Next</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
           </div>
@@ -655,44 +841,94 @@ export default function StaffOrdersPage() {
         {/* Tab 2: Active Orders (ACCEPTED / PROCESSING) */}
         {activeTab === 'active' && (
           <div>
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="font-serif text-lg font-bold text-slate-900">Active Wash &amp; Processing Orders</h2>
-                <p className="text-xs text-slate-500">
-                  Orders physically accepted and currently in the washing, drying, or pressing cycle. Set ETAs or mark ready once finished.
-                </p>
               </div>
 
-              {selectedOrderIds.size > 0 && (
-                <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl animate-in fade-in">
-                  <span className="text-xs font-semibold text-blue-900">
-                    {selectedOrderIds.size} order{selectedOrderIds.size > 1 ? 's' : ''} selected
-                  </span>
-                  <button
-                    onClick={handleBulkMarkReady}
-                    disabled={bulkReadyMutation.isPending}
-                    className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
-                  >
-                    {bulkReadyMutation.isPending ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Processing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Mark Selected as Ready ({selectedOrderIds.size})</span>
-                      </>
+              <div className="flex flex-col items-stretch md:items-end gap-3 w-full md:w-auto">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    activeQuery.refetch();
+                  }}
+                  className="flex flex-col sm:flex-row gap-2 w-full md:w-auto items-stretch sm:items-center"
+                >
+                  <div className="relative w-full sm:w-56 shrink-0">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={activeSearchQuery}
+                      onChange={(e) => setActiveSearchQuery(e.target.value)}
+                      placeholder={getSearchPlaceholder(activeFilterType)}
+                      className="w-full pl-9 pr-8 py-2 bg-white border border-cream-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 transition"
+                    />
+                    {activeSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveSearchQuery('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     )}
-                  </button>
-                  <button
-                    onClick={() => setSelectedOrderIds(new Set())}
-                    className="text-xs text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <select
+                      value={activeFilterType}
+                      onChange={(e) => setActiveFilterType(e.target.value as SearchFilterType)}
+                      className="flex-1 sm:flex-none bg-white border border-cream-300 rounded-xl text-xs font-semibold text-slate-700 py-2 pl-3 pr-8 focus:outline-hidden focus:ring-2 focus:ring-maroon-700/20 focus:border-maroon-700 appearance-none cursor-pointer"
+                      style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1em 1em" }}
+                    >
+                      {SEARCH_FILTER_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="submit"
+                      className="px-3.5 py-2 bg-maroon-700 hover:bg-maroon-800 text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-xs shadow-maroon-700/10 active:scale-[0.98]"
+                    >
+                      <Search className="w-3.5 h-3.5" />
+                      <span>Search</span>
+                    </button>
+                  </div>
+                </form>
+
+                {selectedOrderIds.size > 0 && (
+                  <div className="flex flex-wrap items-center gap-3 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl animate-in fade-in w-full sm:w-auto">
+                    <span className="text-xs font-semibold text-blue-900">
+                      {selectedOrderIds.size} order{selectedOrderIds.size > 1 ? 's' : ''} selected
+                    </span>
+                    <button
+                      onClick={handleBulkMarkReady}
+                      disabled={bulkReadyMutation.isPending}
+                      className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
+                    >
+                      {bulkReadyMutation.isPending ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Mark Selected ({selectedOrderIds.size})</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setSelectedOrderIds(new Set())}
+                      className="text-xs text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {activeQuery.isError && (
@@ -722,8 +958,17 @@ export default function StaffOrdersPage() {
                     Accept orders from the Incoming Queue tab to start processing them.
                   </p>
                 </div>
+              ) : filteredActiveOrders.length === 0 ? (
+                <div className="p-12 text-center text-slate-400">
+                  <Search className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-700">No matching orders</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    No active orders match "{activeSearchQuery}". Try a different keyword or clear the search.
+                  </p>
+                </div>
               ) : (
-                <div className="overflow-x-auto">
+                <>
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-cream-50 text-xs uppercase font-semibold text-slate-500 border-b border-cream-200 tracking-wider">
                       <tr>
@@ -731,12 +976,12 @@ export default function StaffOrdersPage() {
                           <input
                             type="checkbox"
                             checked={
-                              activeOrders.filter((o) => o.status === 'PROCESSING').length > 0 &&
+                              filteredActiveOrders.filter((o) => o.status === 'PROCESSING').length > 0 &&
                               selectedOrderIds.size ===
-                                activeOrders.filter((o) => o.status === 'PROCESSING').length
+                                filteredActiveOrders.filter((o) => o.status === 'PROCESSING').length
                             }
-                            onChange={() => toggleAllSelection(activeOrders)}
-                            disabled={!activeOrders.some((o) => o.status === 'PROCESSING')}
+                            onChange={() => toggleAllSelection(filteredActiveOrders)}
+                            disabled={!filteredActiveOrders.some((o) => o.status === 'PROCESSING')}
                             aria-label="Select all processing orders"
                             className="w-4 h-4 rounded border-cream-300 text-maroon-700 focus:ring-maroon-700 cursor-pointer disabled:opacity-40"
                           />
@@ -750,7 +995,7 @@ export default function StaffOrdersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-cream-200">
-                      {activeOrders.map((order) => {
+                      {filteredActiveOrders.map((order) => {
                         const isMismatch = order.countMismatchFlag;
                         const isProcessing = order.status === 'PROCESSING';
                         const isSelected = selectedOrderIds.has(order.id);
@@ -777,7 +1022,7 @@ export default function StaffOrdersPage() {
                               </div>
                               <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-cream-100 text-slate-800 border border-cream-200">
-                                  Bag #{order.bagNumber}
+                                  {order.bagNumber}
                                 </span>
                               </div>
                             </td>
@@ -863,13 +1108,7 @@ export default function StaffOrdersPage() {
 
                                 <button
                                   onClick={() => {
-                                    if (
-                                      window.confirm(
-                                        `Mark Order ${order.orderCode} (Bag ${order.bagNumber}) as READY for pickup? This will generate a pickup OTP.`
-                                      )
-                                    ) {
-                                      markReadyMutation.mutate({ id: order.id });
-                                    }
+                                    markReadyMutation.mutate({ id: order.id });
                                   }}
                                   disabled={markReadyMutation.isPending}
                                   className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
@@ -885,6 +1124,122 @@ export default function StaffOrdersPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile View for Active Orders */}
+                <div className="block md:hidden divide-y divide-cream-100">
+                  {filteredActiveOrders.map((order) => {
+                    const isMismatch = order.countMismatchFlag;
+                    const isProcessing = order.status === 'PROCESSING';
+                    const isSelected = selectedOrderIds.has(order.id);
+                    return (
+                      <div
+                        key={order.id}
+                        className={`p-4 flex flex-col gap-3 transition-colors ${
+                          isSelected ? 'bg-cream-100/60' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-2.5">
+                            <div className="pt-0.5">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleOrderSelection(order.id, isProcessing)}
+                                disabled={!isProcessing}
+                                aria-label={`Select order ${order.orderCode}`}
+                                className="w-4 h-4 rounded border-cream-300 text-maroon-700 focus:ring-maroon-700 cursor-pointer disabled:opacity-30"
+                              />
+                            </div>
+                            <div>
+                              <div className="font-mono font-bold text-maroon-700 text-sm">
+                                {order.orderCode}
+                              </div>
+                              <span className="inline-flex items-center px-2 py-0.5 mt-1 rounded text-[11px] font-semibold bg-cream-100 text-slate-800 border border-cream-200">
+                                {order.bagNumber}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="text-right flex flex-col items-end">
+                            <span className="font-bold text-slate-900 text-sm">
+                              {order.verifiedCount ?? order.selfReportedCount} pcs
+                            </span>
+                            {isMismatch ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300 mt-1">
+                                <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                                <span>Mismatch ({order.selfReportedCount} rep.)</span>
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 mt-0.5">
+                                Reported: {order.selfReportedCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-xs text-slate-600 bg-cream-50 p-3 rounded-lg border border-cream-100 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="font-semibold text-slate-900">{order.student?.name || 'Student'}</div>
+                              <div className="text-slate-500 text-[11px]">{order.student?.email || '—'}</div>
+                              {order.student?.mobileNumber && (
+                                <div className="text-slate-400 font-mono text-[10px]">{order.student.mobileNumber}</div>
+                              )}
+                            </div>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                              <Clock className="w-2.5 h-2.5 animate-spin text-indigo-500" />
+                              <span>{order.status}</span>
+                            </span>
+                          </div>
+
+                          <div className="pt-2 border-t border-cream-200 flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500">Estimated Delivery:</span>
+                            {order.expectedReadyAt ? (
+                              <div className="font-semibold text-slate-800 flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                                <span>{formatDate(order.expectedReadyAt)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic">Not set</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1 border-t border-cream-100 mt-1">
+                          {order.expectedReadyAt ? (
+                            <button
+                              onClick={() => handleOpenEtaModal(order)}
+                              className="flex-1 inline-flex items-center justify-center gap-1 bg-white hover:bg-cream-100 text-slate-700 border border-cream-300 text-xs font-semibold py-2.5 rounded-xl transition cursor-pointer"
+                            >
+                              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                              <span>Change ETA</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleOpenEtaModal(order)}
+                              className="flex-1 inline-flex items-center justify-center gap-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 py-2.5 rounded-xl transition font-medium cursor-pointer"
+                            >
+                              <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Set ETA</span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              markReadyMutation.mutate({ id: order.id });
+                            }}
+                            disabled={markReadyMutation.isPending}
+                            className="flex-1 inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold py-2.5 rounded-xl shadow-xs transition cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Mark Ready</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                </>
               )}
             </div>
           </div>
@@ -893,13 +1248,13 @@ export default function StaffOrdersPage() {
 
       {/* MODAL 1: Accept Order & Verify Item Count */}
       {acceptModalOrder && (
-        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95">
             <div className="bg-maroon-900 text-white px-5 py-4 flex items-center justify-between">
               <div>
                 <h3 className="font-serif font-bold text-base">Accept Order &amp; Verify Count</h3>
                 <p className="text-xs text-slate-400">
-                  {acceptModalOrder.orderCode} • Bag #{acceptModalOrder.bagNumber}
+                  {acceptModalOrder.orderCode} • {acceptModalOrder.bagNumber}
                 </p>
               </div>
               <button
@@ -997,13 +1352,13 @@ export default function StaffOrdersPage() {
 
       {/* MODAL 2: Set ETA Date */}
       {etaModalOrder && (
-        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95">
             <div className="bg-maroon-900 text-white px-5 py-4 flex items-center justify-between">
               <div>
                 <h3 className="font-serif font-bold text-base">Set Estimated Ready Date</h3>
                 <p className="text-xs text-slate-400">
-                  {etaModalOrder.orderCode} • Bag #{etaModalOrder.bagNumber}
+                  {etaModalOrder.orderCode} • {etaModalOrder.bagNumber}
                 </p>
               </div>
               <button
@@ -1070,68 +1425,9 @@ export default function StaffOrdersPage() {
         </div>
       )}
 
-      {/* MODAL 3: Mark Ready OTP Generated Banner / Modal */}
-      {readyOtpModal && (
-        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="bg-emerald-600 text-white px-6 py-5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">
-                  <KeyRound className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-serif font-bold text-base">Order Ready for Collection</h3>
-                  <p className="text-xs text-emerald-100">Collection OTP Generated</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setReadyOtpModal(null)}
-                className="text-emerald-100 hover:text-white p-1 rounded-lg transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 text-center space-y-4">
-              <div className="bg-cream-50 border border-cream-200 rounded-xl p-3 text-xs text-slate-600">
-                <p>
-                  Order <span className="font-mono font-bold text-slate-900">{readyOtpModal.orderCode}</span> (Bag #{readyOtpModal.bagNumber}) is now marked ready.
-                </p>
-                {readyOtpModal.studentName && (
-                  <p className="text-[11px] text-slate-400 mt-0.5">Student: {readyOtpModal.studentName}</p>
-                )}
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                  4-Digit Collection OTP
-                </p>
-                <div className="inline-flex items-center justify-center px-6 py-3 bg-emerald-50 border-2 border-emerald-500 rounded-2xl">
-                  <span className="font-mono text-3xl font-black tracking-widest text-emerald-700">
-                    {readyOtpModal.otp}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  This OTP has been attached to the student's live tracking view. Handover staff will require this OTP to verify collection.
-                </p>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  onClick={() => setReadyOtpModal(null)}
-                  className="w-full py-2.5 bg-maroon-900 hover:bg-maroon-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
-                >
-                  Done / Dismiss
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* MODAL 4: Bulk Mark Ready Summary Results */}
       {bulkReadyModal && (
-        <div className="fixed inset-0 z-50 bg-maroon-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
             <div className="bg-maroon-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
@@ -1169,16 +1465,15 @@ export default function StaffOrdersPage() {
                       >
                         <div>
                           <div className="font-mono font-bold text-slate-900">
-                            {item.orderCode} <span className="font-sans font-semibold text-slate-600">(Bag #{item.bagNumber})</span>
+                            {item.orderCode} <span className="font-sans font-semibold text-slate-600">({item.bagNumber})</span>
                           </div>
                           {item.studentName && (
                             <div className="text-[11px] text-slate-500 mt-0.5">{item.studentName}</div>
                           )}
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] uppercase font-bold text-emerald-700 block mb-0.5">OTP</span>
-                          <span className="font-mono text-base font-black text-emerald-700 bg-white border border-emerald-300 px-2 py-0.5 rounded-md inline-block">
-                            {item.otp}
+                          <span className="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100/80 border border-emerald-300 px-2 py-1 rounded-md inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Ready
                           </span>
                         </div>
                       </div>
@@ -1200,7 +1495,7 @@ export default function StaffOrdersPage() {
                         className="bg-red-50/60 border border-red-200 rounded-xl p-3 text-xs"
                       >
                         <div className="font-mono font-bold text-slate-900">
-                          {item.orderCode ? `${item.orderCode} (Bag #${item.bagNumber})` : item.orderId}
+                          {item.orderCode ? `${item.orderCode} (${item.bagNumber})` : item.orderId}
                         </div>
                         <p className="text-red-700 text-[11px] mt-0.5">{item.reason}</p>
                       </div>

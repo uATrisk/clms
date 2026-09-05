@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/auth-context';
+import { CampusFooter } from './campus-footer';
 import {
-  Shield,
   Menu,
   X,
   User as UserIcon,
@@ -49,34 +49,26 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'My Laundry', path: '/track' },
     { name: 'History', path: '/history' },
     { name: 'Help Center', path: '/help' },
     { name: 'Announcements', path: '/announcements' },
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] text-gray-800 flex flex-col font-sans antialiased selection:bg-maroon-200 selection:text-maroon-900">
+    <div className="min-h-screen bg-cream-50 text-gray-800 flex flex-col font-sans antialiased selection:bg-maroon-200 selection:text-maroon-900">
       {/* Top University Brand Bar */}
-      <header className="sticky top-0 z-40 bg-[#7A1E2B] text-white shadow-md border-b border-maroon-800">
+      <header className="sticky top-0 z-40 bg-maroon-700 text-white shadow-md border-b border-maroon-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-18">
             {/* Left: Brand / Crest & Wordmark */}
             <div className="flex items-center gap-3">
               <Link
                 to="/"
-                className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-200 rounded-lg p-1"
+                className="flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-200 rounded-xl"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-maroon-900/60 border border-amber-300/30 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
-                  <Shield className="w-5 h-5 text-amber-200" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-cream-50 leading-tight group-hover:text-amber-200 transition-colors">
-                    College Laundry
-                  </span>
-                  <span className="text-[10px] tracking-wider uppercase text-amber-200/80 font-medium hidden sm:inline-block">
-                    Management System
-                  </span>
+                <div className="bg-white rounded-xl p-1.5 flex items-center">
+                  <img src="/logo.png" alt="College Laundry" className="h-9 w-auto object-contain hidden sm:block group-hover:opacity-90 transition-opacity" />
+                  <img src="/icon.png" alt="College Laundry" className="h-8 w-auto object-contain sm:hidden group-hover:opacity-90 transition-opacity" />
                 </div>
               </Link>
             </div>
@@ -124,7 +116,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         </p>
                         <p className="text-xs text-maroon-700 font-medium truncate mt-0.5 flex items-center gap-1">
                           <ShoppingBag className="w-3.5 h-3.5" />
-                          {user.bagNumber ? `Bag #${user.bagNumber}` : user.email}
+                          {user.bagNumber ? user.bagNumber : user.email}
                         </p>
                       </div>
 
@@ -211,15 +203,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         {children || <Outlet />}
       </main>
 
-      {/* Campus Footer Note */}
-      <footer className="bg-cream-100 border-t border-cream-200 py-4 px-4 text-center text-xs text-gray-500">
-        <p className="font-serif font-medium text-maroon-900">
-          College Laundry Management System
-        </p>
-        <p className="mt-0.5 text-[11px] text-gray-400">
-          Seamless, reliable, and trackable laundry care for campus residents.
-        </p>
-      </footer>
+      {/* Shared Campus Illustration Footer */}
+      <CampusFooter />
     </div>
   );
 };

@@ -6,11 +6,17 @@ import { z } from 'zod';
 import axios from 'axios';
 import { useAuth } from '../contexts/auth-context';
 import { AlertCircle, User, Loader2 } from 'lucide-react';
+import { CampusFooter } from '../components/campus-footer';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 const profileSchema = z.object({
-  bagNumber: z.string().trim().min(3, 'Bag Number must be at least 3 characters'),
+  gender: z.enum(['MALE', 'FEMALE'], { message: 'Please select a gender' }),
+  bagNumber: z
+    .string()
+    .trim()
+    .min(1, 'Bag Number is required')
+    .regex(/^\d+$/, 'Enter numeric digits only (e.g. 101)'),
   mobileNumber: z.string().trim().regex(/^\+?[1-9]\d{9,14}$/, 'Enter a valid mobile number (e.g., 9876543210)'),
   collegeId: z.string().trim().optional(),
 });
@@ -43,7 +49,11 @@ export default function ProfilePage() {
           headers: { Authorization: `Bearer ${token}` }
         });
         const profile = response.data.student;
-        if (profile.bagNumber) setValue('bagNumber', profile.bagNumber);
+        if (profile.gender) setValue('gender', profile.gender);
+        if (profile.bagNumber) {
+          const numericPart = profile.bagNumber.replace(/^(B-|G-)/i, '').trim();
+          setValue('bagNumber', numericPart);
+        }
         if (profile.mobileNumber) setValue('mobileNumber', profile.mobileNumber);
         if (profile.collegeId) setValue('collegeId', profile.collegeId);
       } catch (err: any) {
@@ -117,21 +127,53 @@ export default function ProfilePage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gender <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 p-3 border border-cream-300 rounded-lg cursor-pointer hover:bg-cream-100 transition-all has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 has-[:checked]:text-maroon-900">
+                  <input
+                    type="radio"
+                    value="MALE"
+                    {...register('gender')}
+                    className="text-maroon-700 focus:ring-maroon-500 h-4 w-4"
+                  />
+                  <span className="text-sm font-medium">Male</span>
+                </label>
+                <label className="flex items-center gap-2 p-3 border border-cream-300 rounded-lg cursor-pointer hover:bg-cream-100 transition-all has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 has-[:checked]:text-maroon-900">
+                  <input
+                    type="radio"
+                    value="FEMALE"
+                    {...register('gender')}
+                    className="text-maroon-700 focus:ring-maroon-500 h-4 w-4"
+                  />
+                  <span className="text-sm font-medium">Female</span>
+                </label>
+              </div>
+              {errors.gender && (
+                <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>
+              )}
+            </div>
+
+            <div>
               <label htmlFor="bagNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                L-Sys Bag Number <span className="text-red-500">*</span>
+                L-Sys Bag Number (numeric part only) <span className="text-red-500">*</span>
               </label>
               <input
                 id="bagNumber"
                 type="text"
                 maxLength={20}
                 {...register('bagNumber')}
-                placeholder="e.g. BAG-101"
+                placeholder="e.g. 101"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-all ${
                   errors.bagNumber
                     ? 'border-red-300 focus:ring-red-200 bg-red-50'
                     : 'border-cream-300 focus:ring-maroon-200 focus:border-maroon-700 bg-white'
                 }`}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Prefix (B- for Male, G- for Female) will be added automatically based on gender selected.
+              </p>
               {errors.bagNumber && (
                 <p className="text-red-500 text-xs mt-1">{errors.bagNumber.message}</p>
               )}
@@ -195,6 +237,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
+      <CampusFooter />
     </div>
   );
 }

@@ -1,17 +1,15 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Link, useLocation } from 'react-router-dom';
 import { useStaffAuth } from '../contexts/staff-auth-context';
 import {
-  ShieldAlert,
   Users,
   Package,
   Plus,
   RefreshCw,
   LogOut,
   AlertCircle,
-  CheckCircle2,
   X,
   Lock,
   User,
@@ -168,6 +166,19 @@ export default function AdminDashboardPage() {
   const location = useLocation();
 
   const [activeTab, setActiveTab] = useState<'staff' | 'orders' | 'complaints' | 'analytics' | 'announcements'>('staff');
+
+  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+  const avatarDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target as Node)) {
+        setIsAvatarOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Staff creation modal state
   const [isCreateStaffOpen, setIsCreateStaffOpen] = useState(false);
@@ -669,16 +680,16 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col font-sans">
       {/* Top Admin Header */}
-      <header className="bg-maroon-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-maroon-800 text-maroon-200 flex items-center justify-center font-bold">
-            <ShieldAlert className="w-5 h-5" />
+      <header className="bg-maroon-700 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-30">
+        <Link
+          to="/admin/dashboard"
+          className="flex items-center group focus:outline-none"
+        >
+          <div className="bg-white rounded-xl p-1.5 flex items-center shadow-sm">
+            <img src="/logo.png" alt="Rishihood Laundry" className="h-7 w-auto object-contain hidden sm:block" />
+            <img src="/icon.png" alt="Rishihood Laundry" className="h-7 w-auto object-contain sm:hidden" />
           </div>
-          <div>
-            <h1 className="font-serif text-sm sm:text-base font-bold tracking-tight">CLMS Admin Operations</h1>
-            <p className="text-[11px] text-cream-200">System Controls &amp; Analytics</p>
-          </div>
-        </div>
+        </Link>
 
         {/* Navigation Switcher Tabs */}
         <div className="hidden md:flex items-center gap-1.5 bg-maroon-800/80 p-1 rounded-xl border border-maroon-700/60">
@@ -714,43 +725,60 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-medium text-cream-100">
-              {staffUser?.name || staffUser?.username}
-            </p>
-            <span className="text-[10px] font-semibold tracking-wider uppercase text-maroon-200 bg-maroon-950/70 border border-maroon-800/60 px-1.5 py-0.5 rounded">
-              ADMIN
-            </span>
-          </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative" ref={avatarDropdownRef}>
+            <button
+              onClick={() => setIsAvatarOpen(!isAvatarOpen)}
+              className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-amber-300/50 transition-all focus:outline-none cursor-pointer"
+              aria-expanded={isAvatarOpen}
+              aria-label="User Menu"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cream-100 text-maroon-800 border-2 border-amber-300/40 flex items-center justify-center font-serif font-bold text-sm sm:text-base shadow-sm hover:scale-105 transition-transform">
+                {staffUser?.name ? staffUser.name[0].toUpperCase() : <User className="w-5 h-5" />}
+              </div>
+            </button>
 
-          <button
-            onClick={staffLogout}
-            className="p-2 text-cream-200 hover:text-rose-400 hover:bg-maroon-800 rounded-lg transition"
-            title="Log Out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+            {/* Dropdown Menu */}
+            {isAvatarOpen && (
+              <div className="absolute right-0 mt-2 w-56 sm:w-60 bg-white rounded-2xl shadow-2xl border border-maroon-100 py-2 z-50 animate-fade-in origin-top-right text-gray-800">
+                <div className="px-4 py-3 bg-gradient-to-b from-cream-100/60 to-transparent border-b border-cream-200/60">
+                  <p className="text-sm font-semibold text-gray-900 truncate font-serif">
+                    {staffUser?.name || staffUser?.username}
+                  </p>
+                  <div className="mt-1">
+                    <span className="text-[10px] font-semibold tracking-wider uppercase text-maroon-700 bg-maroon-50 border border-maroon-200 px-2 py-0.5 rounded-md inline-block">
+                      {staffUser?.role}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setIsAvatarOpen(false);
+                      staffLogout();
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8 space-y-6">
         {/* Notification Banner */}
-        {notification && (
+        {notification && notification.type !== 'success' && (
           <div
-            className={`p-4 rounded-xl flex items-center justify-between shadow-xs border ${
-              notification.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-rose-50 text-rose-800 border-rose-200'
-            }`}
+            className={`p-4 rounded-xl flex items-center justify-between shadow-xs border bg-rose-50 text-rose-800 border-rose-200`}
           >
             <div className="flex items-center gap-2 text-sm font-medium">
-              {notification.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-              )}
+              <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
               <span>{notification.message}</span>
             </div>
             <button
@@ -825,11 +853,12 @@ export default function AdminDashboardPage() {
           {activeTab === 'staff' && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-staff'] })}
-                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
+                onClick={() => staffQuery.refetch()}
+                disabled={staffQuery.isFetching}
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer disabled:opacity-50"
                 title="Refresh staff list"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${staffQuery.isFetching ? 'animate-spin' : ''}`} />
               </button>
               <button
                 onClick={() => {
@@ -847,11 +876,12 @@ export default function AdminDashboardPage() {
           {activeTab === 'orders' && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] })}
-                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
+                onClick={() => ordersQuery.refetch()}
+                disabled={ordersQuery.isFetching}
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer disabled:opacity-50"
                 title="Refresh master orders"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${ordersQuery.isFetching ? 'animate-spin' : ''}`} />
               </button>
             </div>
           )}
@@ -859,11 +889,12 @@ export default function AdminDashboardPage() {
           {activeTab === 'complaints' && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-complaints'] })}
-                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
+                onClick={() => complaintsQuery.refetch()}
+                disabled={complaintsQuery.isFetching}
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer disabled:opacity-50"
                 title="Refresh complaints list"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${complaintsQuery.isFetching ? 'animate-spin' : ''}`} />
               </button>
             </div>
           )}
@@ -871,11 +902,12 @@ export default function AdminDashboardPage() {
           {activeTab === 'analytics' && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-analytics-summary'] })}
-                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
+                onClick={() => analyticsQuery.refetch()}
+                disabled={analyticsQuery.isFetching}
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer disabled:opacity-50"
                 title="Refresh analytics"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${analyticsQuery.isFetching ? 'animate-spin' : ''}`} />
               </button>
             </div>
           )}
@@ -883,11 +915,12 @@ export default function AdminDashboardPage() {
           {activeTab === 'announcements' && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-announcements'] })}
-                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer"
+                onClick={() => announcementsQuery.refetch()}
+                disabled={announcementsQuery.isFetching}
+                className="p-2 rounded-lg border border-cream-200 bg-white text-gray-600 hover:bg-cream-50 transition cursor-pointer disabled:opacity-50"
                 title="Refresh announcements list"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${announcementsQuery.isFetching ? 'animate-spin' : ''}`} />
               </button>
               <button
                 onClick={() => {
@@ -1052,7 +1085,7 @@ export default function AdminDashboardPage() {
                     <thead className="bg-cream-50 text-gray-700 text-xs uppercase font-semibold border-b border-cream-200">
                       <tr>
                         <th className="py-3.5 px-4">Order Code</th>
-                        <th className="py-3.5 px-4">Bag #</th>
+                        <th className="py-3.5 px-4">Bag Number</th>
                         <th className="py-3.5 px-4">Student Details</th>
                         <th className="py-3.5 px-4">Items (Claimed / Verified)</th>
                         <th className="py-3.5 px-4">Status</th>
@@ -1782,7 +1815,7 @@ export default function AdminDashboardPage() {
 
       {/* CREATE ANNOUNCEMENT MODAL */}
       {isCreateAnnouncementOpen && (
-        <div className="fixed inset-0 bg-maroon-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-maroon-900 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -1854,7 +1887,7 @@ export default function AdminDashboardPage() {
 
       {/* CREATE STAFF MODAL */}
       {isCreateStaffOpen && (
-        <div className="fixed inset-0 bg-maroon-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-maroon-900 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -1967,7 +2000,7 @@ export default function AdminDashboardPage() {
 
       {/* RESOLVE COMPLAINT MODAL */}
       {isResolveModalOpen && activeComplaintForResolve && (
-        <div className="fixed inset-0 bg-maroon-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-cream-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-maroon-900 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">

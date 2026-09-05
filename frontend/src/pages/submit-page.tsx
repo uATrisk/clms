@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ArrowLeft, Loader2, CheckCircle2, ShoppingBag, AlertCircle, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/auth-context';
+import { CampusFooter } from '../components/campus-footer';
 
 const submitSchema = z.object({
   selfReportedCount: z.coerce
@@ -82,7 +83,7 @@ export default function SubmitPage() {
           <div>
             <h1 className="font-serif text-2xl font-bold text-gray-900">Drop off Laundry</h1>
             <p className="text-gray-500 mt-1 text-sm leading-relaxed">
-              Submit a new laundry request for Bag <span className="font-semibold text-gray-800">{user?.bagNumber}</span>.
+              Submit a new laundry request for <span className="font-semibold text-gray-800">{user?.bagNumber}</span>.
             </p>
           </div>
 
@@ -93,7 +94,7 @@ export default function SubmitPage() {
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <p className="font-semibold">Bag #{user?.bagNumber}</p>
+                <p className="font-semibold">{user?.bagNumber}</p>
                 <p className="text-maroon-800/80">{user?.email}</p>
               </div>
             </div>
@@ -190,6 +191,7 @@ export default function SubmitPage() {
           </form>
         </div>
       </div>
+      <CampusFooter />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useStaffAuth } from '../contexts/staff-auth-context';
-import { ShieldCheck, AlertCircle, Loader2, Lock, User } from 'lucide-react';
+import { AlertCircle, Loader2, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -13,6 +13,7 @@ export default function StaffLoginPage() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -51,20 +52,15 @@ export default function StaffLoginPage() {
 
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-cream-200">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-cream-200 p-6 sm:p-8">
         {/* Header */}
-        <div className="bg-maroon-900 p-8 text-center text-white">
-          <div className="mx-auto bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <ShieldCheck className="w-8 h-8 text-cream-200" />
-          </div>
-          <h1 className="font-serif text-2xl font-bold tracking-tight">Staff Portal Login</h1>
-          <p className="text-cream-200/80 mt-2 text-sm">
-            Rishihood University Laundry Staff & Admin Access
-          </p>
+        <div className="text-center flex flex-col items-center mb-6">
+          <img src="/logo.png" alt="Rishihood Laundry" className="h-14 w-auto object-contain mb-4" />
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-gray-900">Staff Portal Login</h1>
         </div>
 
         {/* Content */}
-        <div className="p-6 sm:p-8">
+        <div>
           {error && (
             <div className="w-full mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-sm">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -109,15 +105,27 @@ export default function StaffLoginPage() {
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   disabled={isLoading}
                   autoComplete="current-password"
-                  className="w-full pl-9 pr-3 py-2.5 border border-cream-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-maroon-700 focus:border-maroon-700 outline-none transition-all disabled:bg-cream-100"
+                  className="w-full pl-9 pr-10 py-2.5 border border-cream-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-maroon-700 focus:border-maroon-700 outline-none transition-all disabled:bg-cream-100"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-maroon-700 focus:outline-none transition-colors cursor-pointer"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
 

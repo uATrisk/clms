@@ -44,11 +44,18 @@ function MainContent() {
   const location = useLocation();
   const { token } = useAuth();
   const isStaffRoute = location.pathname.startsWith('/staff') || location.pathname.startsWith('/admin');
-  const isStudentDashboard = location.pathname === '/' && !!token;
+
+  // Routes that render their own AppShell header for authenticated users
+  const isAuthAppShellRoute = !!token && (
+    location.pathname === '/' ||
+    location.pathname === '/history' ||
+    location.pathname === '/help' ||
+    location.pathname === '/announcements'
+  );
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!isStaffRoute && !isStudentDashboard && <Header />}
+      {!isStaffRoute && !isAuthAppShellRoute && <Header />}
       <main className="flex-1 flex flex-col">
         <Routes>
           <Route path="/" element={<HomeRoute />} />

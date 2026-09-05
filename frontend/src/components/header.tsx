@@ -24,8 +24,9 @@ export const Header = () => {
 
   return (
     <header className="w-full bg-white border-b border-cream-200 py-3 px-4 sm:px-8 flex items-center justify-between shadow-xs">
-      <Link to="/" className="flex items-center gap-2 font-serif font-bold text-gray-900 text-lg">
-        <span className="text-maroon-700">🧺</span> CLMS
+      <Link to="/" className="flex items-center group">
+        <img src="/logo.png" alt="Rishihood Laundry" className="h-9 w-auto object-contain hidden sm:block group-hover:opacity-90 transition-opacity" />
+        <img src="/icon.png" alt="Rishihood Laundry" className="h-9 w-auto object-contain sm:hidden group-hover:opacity-90 transition-opacity" />
       </Link>
 
       <div className="flex items-center gap-4">
@@ -46,7 +47,7 @@ export const Header = () => {
                   <p className="text-sm font-serif font-semibold text-gray-900 truncate">{user.name}</p>
                   {user.bagNumber && (
                     <p className="text-xs text-maroon-700 font-medium truncate mt-0.5">
-                      Bag #{user.bagNumber}
+                      {user.bagNumber}
                     </p>
                   )}
                 </div>

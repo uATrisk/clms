@@ -37,3 +37,7 @@ lerna-debug.log*
 # Prisma & DB artifacts
 *.db
 *.sqlite
+CLAUDE.md
+DECISIONS.md
+PROGRESS.md
+docs/

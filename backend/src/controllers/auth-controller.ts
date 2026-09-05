@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { prisma } from '../index';
+import { prisma } from '../db';
 import { generateToken, JwtPayload } from '../utils/jwt';
 import { AppError } from '../middlewares/error-handler';
 import { StaffRole } from '@prisma/client';

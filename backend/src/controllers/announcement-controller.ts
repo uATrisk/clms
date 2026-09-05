@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../index';
+import { prisma } from '../db';
 import { AppError } from '../middlewares/error-handler';
 import { AuthenticatedRequest } from '../middlewares/auth-middleware';
 

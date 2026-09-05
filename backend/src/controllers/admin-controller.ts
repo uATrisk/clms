@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { prisma } from '../index';
+import { prisma } from '../db';
 import { AppError } from '../middlewares/error-handler';
 import { AuthenticatedRequest } from '../middlewares/auth-middleware';
 import { Prisma } from '@prisma/client';

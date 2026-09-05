@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../index';
+import { prisma } from '../db';
 import { AppError } from '../middlewares/error-handler';
 import { AuthenticatedRequest } from '../middlewares/auth-middleware';
 
@@ -24,6 +24,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
         bagNumber: true,
         mobileNumber: true,
         collegeId: true,
+        gender: true,
         createdAt: true,
       },
     });
@@ -44,6 +45,7 @@ const updateProfileSchema = z.object({
   bagNumber: z.string().trim().min(1, 'Bag number is required'),
   mobileNumber: z.string().trim().regex(/^\+?[1-9]\d{9,14}$/, 'Valid mobile number required'),
   collegeId: z.string().trim().optional().nullable(),
+  gender: z.enum(['MALE', 'FEMALE'], { message: 'Gender is required' }),
 });
 
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
@@ -65,7 +67,10 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
       throw error;
     }
 
-    const { bagNumber, mobileNumber, collegeId } = parsed.data;
+    let { bagNumber, mobileNumber, collegeId, gender } = parsed.data;
+
+    const numericBagNumber = bagNumber.replace(/^(B-|G-)/i, '').trim();
+    bagNumber = gender === 'MALE' ? `B-${numericBagNumber}` : `G-${numericBagNumber}`;
 
     const student = await prisma.student.update({
       where: { id: studentId },
@@ -73,6 +78,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         bagNumber,
         mobileNumber,
         collegeId: collegeId !== undefined ? collegeId : undefined,
+        gender,
       },
       select: {
         id: true,
@@ -81,6 +87,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         bagNumber: true,
         mobileNumber: true,
         collegeId: true,
+        gender: true,
         createdAt: true,
       },
     });

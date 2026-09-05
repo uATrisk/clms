@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
-import { prisma } from '../index';
+import { prisma } from '../db';
 import { generateOrderCode } from '../utils/generate-code';
 import { logStatusChange } from '../utils/status-logger';
 import { AppError } from '../middlewares/error-handler';
@@ -48,7 +48,7 @@ export const submitOrder = async (req: Request, res: Response, next: NextFunctio
     }
 
     // Check profile completeness
-    if (!student.bagNumber || !student.bagNumber.trim() || !student.mobileNumber || !student.mobileNumber.trim()) {
+    if (!student.bagNumber || !student.bagNumber.trim() || !student.mobileNumber || !student.mobileNumber.trim() || !student.gender) {
       const error = new Error('Please complete your profile before submitting laundry') as AppError;
       error.status = 400;
       throw error;

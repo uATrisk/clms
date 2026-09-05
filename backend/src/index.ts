@@ -13,17 +13,22 @@ import staffRouter from './routes/staff-router';
 import adminRouter from './routes/admin-router';
 import announcementRouter from './routes/announcement-router';
 
+import { prisma } from './db';
+
 // Load environment config
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-export const prisma = new PrismaClient();
+export { prisma };
 
 // Middlewares
+const corsOrigin = process.env.CORS_ORIGIN;
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*'
+  origin: corsOrigin && corsOrigin.includes(',')
+    ? corsOrigin.split(',').map((o) => o.trim())
+    : corsOrigin || '*'
 }));
 app.use(express.json());
 
@@ -56,6 +61,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server ready at http://localhost:${PORT}`);
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`🚀 Server ready at http://0.0.0.0:${PORT}`);
 });
